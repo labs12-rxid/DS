@@ -1,0 +1,12 @@
+numpy==1.15.4
+pandas
+flask
+flask-cors
+flask-sqlalchemy
+python-decouple 
+python-dotenv 
+gunicorn 
+scikit-learn
+scipy
+joblib==0.13.2
+category-encoders
