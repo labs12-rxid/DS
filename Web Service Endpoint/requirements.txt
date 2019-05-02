@@ -10,3 +10,6 @@ scikit-learn
 scipy
 joblib==0.13.2
 category-encoders
+psycopg2-binary
+sqlalchemy
+boto3

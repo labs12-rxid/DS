@@ -32,7 +32,7 @@ def run_conversion(engine):
                   if_exists='replace',
                   con=engine,
                   schema=schema_name,
-                  chunksize=10,
+                  chunksize=1000,
                   index=False,
                   method='multi')
 
