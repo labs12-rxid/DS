@@ -9,29 +9,76 @@ import pandas as pd
 import pytz
 from pytz import timezone
 import calendar
+import psycopg2
+from sqlalchemy import create_engine
+import boto3
+import os
 
 """ create + config Flask app obj """
 application = Flask(__name__)
 CORS(application)
 
 
+# ______________ R O U T E S  _____________________
+# ________  HOME __________
 @application.route('/')
 def index():
     return render_template('base.html', title='Home')
 
-"""
---->>>> FIELDS NEEDED TO identify <<<<---
-"""
+# ________  /indentify/  route __________
+# __ input  image uri, S3 bucket
+@application.route('/identify', methods=['GET', 'POST'])
+def indentify():
+    if request.method == 'POST':
+        return " YOU just made a POST request to /identify"
+    else:
+        
+        return " YOU just made a GET request to /identify"
 
-@application.route('/identify/<query_str>')
-def identify(query_str):
-    return "You just passed me this as a query string: "+ query_str 
+
+# ________  /rxdata/  route __________
+@application.route('/rxdata', methods=['GET', 'POST'])
+def rxdata():
+    if request.method == 'POST':
+        return " YOU just made a POST request to /rxdata"
+    else:
+        
+        return " YOU just made a GET request to /rxdata"
+
+# ________  /nnet/  route __________
+@application.route('/nnet', methods=['GET', 'POST'])
+def nnet():
+    if request.method == 'POST':
+        return " YOU just made a POST request to /nnet"
+    else:
+        
+        return " YOU just made a GET request to /nnet"
+
+# ________  /rekog/  route __________
+@application.route('/rekog', methods=['GET', 'POST'])
+def rekog():
+    if request.method == 'POST':
+        return " YOU just made a POST request to /rekog"
+    else:
+        
+        return " YOU just made a GET request to /rekog"
 
 
-# FUNCTION TO GET CURRENT DAY AND HOUR -- TO INCLUDE IN .py SCRIPT
+# ___________________ FUNCTIONS ________________________________
+
+
+#____  download file from AWS S3 Bucket into local tmp dir_______
+def download_from_S3(S3_bucketname, S3_filename, local_filename='./S3file.jpg' ):
+    s3_resource = boto3.resource('s3')
+    s3_resource.Object(S3_bucketname, S3_filename).download_file(local_filename)
+    return
+
+
+
+
+# _______ GET CURRENT DAY AND HOUR __________
 def day_hour():
-    # get current time in pacific timezone for prediction
-    #   we're prediction for CA only right now
+    # get current time in pacific timezone
     utc = pytz.utc
     utc.zone
     pacific = timezone('US/Pacific')
@@ -62,7 +109,7 @@ def day_hour():
     return weekday, hour
 
 
-# FUNCTION TO parse API input string for parameters 
+# _________ Parse API input string for parameters _________________
 #  input->  sample API input string(s)-> /indentify/param1=Red&param2=Pill
 #  ouputs -->  
 def parse_input(s):
@@ -90,8 +137,42 @@ def parse_input(s):
         for key, value in month_dict.items():
             if key == month_str:
                 month_num = value
-    
 
+
+#  ____________  CONNECT TO DATABASE ___________________
+def db_connect():
+    # __ Connect to AWS-RDS(postgres) (SQLalchemy.create_engine) ____
+    dbname = ''
+    user = ''
+    host = ''
+    password = ''
+    file = open('aws.rxidds.pwd', 'r')
+    ctr = 1
+    for line in file:
+        line = line.replace('\n', '')
+        if ctr == 1: dbname = line
+        if ctr == 2: user = line
+        if ctr == 3: host = line
+        if ctr == 4: passw = line
+        ctr = ctr + 1
+    pgres_str = 'postgresql+psycopg2://'+user+':'+passw+'@'+host+'/'+dbname
+    pgres_engine = create_engine(pgres_str)
+    return pgres_engine
+
+
+# ________  Verfiy Output From DataBase ______
+def verify_output(pgres_engine):
+    # ______  verify output-table contents ____
+    schema_name = 'rxid'
+    table_name = 'rxid_meds_data'
+    table_string = schema_name + '.' + table_name 
+    query = 'SELECT * FROM ' + table_string + ' LIMIT 10;'
+    for row in pgres_engine.execute(query).fetchall():
+        print(row)
+    return
+
+
+# __________ M A I N ________________________
 if __name__ == '__main__':
     application.run(debug=False)
 
