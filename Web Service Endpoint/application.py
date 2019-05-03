@@ -32,7 +32,6 @@ def indentify():
     if request.method == 'POST':
         return " YOU just made a POST request to /identify"
     else:
-        
         return " YOU just made a GET request to /identify"
 
 
@@ -40,40 +39,43 @@ def indentify():
 @application.route('/rxdata', methods=['GET', 'POST'])
 def rxdata():
     if request.method == 'POST':
-        return " YOU just made a POST request to /rxdata"
+        post_params = request.get_json(force=True)
+        output_info = query_sql_data(post_params)
+        return jsonify(output_info)   # " YOU just made a POST request to /rxdata"
     else:
-        
-        return " YOU just made a GET request to /rxdata"
+        return jsonify(" YOU just made a GET request to /rxdata")
 
 # ________  /nnet/  route __________
 @application.route('/nnet', methods=['GET', 'POST'])
 def nnet():
     if request.method == 'POST':
-        return " YOU just made a POST request to /nnet"
+        return jsonify(" YOU just made a POST request to /nnet")
     else:
         
-        return " YOU just made a GET request to /nnet"
+        return jsonify(" YOU just made a GET request to /nnet")
 
 # ________  /rekog/  route __________
 @application.route('/rekog', methods=['GET', 'POST'])
 def rekog():
     if request.method == 'POST':
-        return " YOU just made a POST request to /rekog"
+        return jsonify(" YOU just made a POST request to /rekog")
     else:
-        
-        return " YOU just made a GET request to /rekog"
+        return jsonify(" YOU just made a GET request to /rekog")
 
 
 # ___________________ FUNCTIONS ________________________________
 
+#  _____ query and return SQL data ______________
+def query_sql_data(parameter_list):
+    #  echo the output for now  -- needs query code 
+    return parameter_list
 
-#____  download file from AWS S3 Bucket into local tmp dir_______
-def download_from_S3(S3_bucketname, S3_filename, local_filename='./S3file.jpg' ):
+
+# ____  download file from AWS S3 Bucket into local tmp dir_______
+def download_from_S3(S3_bucketname, S3_filename, local_filename='S3file.jpg'):
     s3_resource = boto3.resource('s3')
-    s3_resource.Object(S3_bucketname, S3_filename).download_file(local_filename)
+    s3_resource.Object(S3_bucketname, S3_filename).download_file(f'./{local_filename}')
     return
-
-
 
 
 # _______ GET CURRENT DAY AND HOUR __________
@@ -177,7 +179,7 @@ if __name__ == '__main__':
     application.run(debug=False)
 
     # --- browser debugging
-    #application.run(debug=True)
+    # application.run(debug=True)
 
     #  --- for terminal debugging ------
     #input_str = 'RED PILL'
