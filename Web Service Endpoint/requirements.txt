@@ -13,3 +13,6 @@ category-encoders
 psycopg2-binary
 sqlalchemy
 boto3
+opencv-python
+selenium
+beautifulsoup4
