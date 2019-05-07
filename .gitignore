@@ -105,10 +105,13 @@ venv.bak/
 
 
 #  RXid files to ignore
-CSV/aws.pwd
+*.pem
 .vscode/settings.json
+CSV/aws.pwd
 CSV/aws.lambdarpg.pwd
 CSV/aws.rxidds.pwd
 CSV/Pills.TEST.csv
 Web Service Endpoint/aws.rxidds.pwd
+Web Service Endpoint/BotoUser.credentials.csv
 BotoUser.credentials.csv
+aws.rxidds.pwd

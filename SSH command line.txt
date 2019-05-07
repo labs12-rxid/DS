@@ -1,0 +1,2 @@
+
+ssh -i "RXid-env.pem" ec2-user@ec2-3-14-57-148.us-east-2.compute.amazonaws.com

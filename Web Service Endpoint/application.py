@@ -14,6 +14,28 @@ from sqlalchemy import create_engine
 import boto3
 import os
 
+
+#______DRUGSCOM imports _____
+from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.common.exceptions import WebDriverException, TimeoutException
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.support import expected_conditions as EC
+from bs4 import BeautifulSoup
+import io
+import time
+import sys
+import re
+import numpy as np
+import glob
+import shutil
+import json
+import html
+from string import punctuation
+from collections import deque
+
 """ create + config Flask app obj """
 application = Flask(__name__)
 CORS(application)
@@ -30,9 +52,14 @@ def index():
 @application.route('/identify', methods=['GET', 'POST'])
 def indentify():
     if request.method == 'POST':
-        return " YOU just made a POST request to /identify"
+        post_params = request.get_json(force=True)
+        output_info = query_sql_data(post_params)
+        return jsonify(output_info)
     else:
-        return " YOU just made a GET request to /identify"
+
+        results = drugscom()
+        
+        return jsonify("YOU just made a GET request to /identify : " + results)
 
 
 # ________  /rxdata/  route __________
@@ -41,29 +68,43 @@ def rxdata():
     if request.method == 'POST':
         post_params = request.get_json(force=True)
         output_info = query_sql_data(post_params)
-        return jsonify(output_info)   # " YOU just made a POST request to /rxdata"
+        return jsonify(output_info)
     else:
-        return jsonify(" YOU just made a GET request to /rxdata")
+        return jsonify("YOU just made a GET request to /rxdata")
 
 # ________  /nnet/  route __________
 @application.route('/nnet', methods=['GET', 'POST'])
 def nnet():
     if request.method == 'POST':
-        return jsonify(" YOU just made a POST request to /nnet")
+        post_params = request.get_json(force=True)
+        output_info = query_sql_data(post_params)
+        return jsonify(output_info)
     else:
         
-        return jsonify(" YOU just made a GET request to /nnet")
+        return jsonify("YOU just made a GET request to /nnet")
 
 # ________  /rekog/  route __________
 @application.route('/rekog', methods=['GET', 'POST'])
 def rekog():
     if request.method == 'POST':
-        return jsonify(" YOU just made a POST request to /rekog")
+        post_params = request.get_json(force=True)
+        output_info = post_rekog(post_params)
+        return jsonify(output_info)
     else:
-        return jsonify(" YOU just made a GET request to /rekog")
+        return jsonify("YOU just made a GET request to /rekog")
 
 
 # ___________________ FUNCTIONS ________________________________
+def drugscom():
+    options = Options()
+    options.headless = True
+    driver = webdriver.Chrome(options=options)
+    driver.get("https://www.youtube.com/")
+    element_text = driver.find_element_by_id("title").text
+    return element_text
+
+def post_rekog(post_params):
+    return post_params
 
 #  _____ query and return SQL data ______________
 def query_sql_data(parameter_list):

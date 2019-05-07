@@ -1,0 +1,11 @@
+
+cd /tmp/
+wget https://chromedriver.storage.googleapis.com/2.37/chromedriver_linux64.zip
+unzip chromedriver_linux64.zip
+sudo mv chromedriver /usr/local/bin/chromedriver
+
+chromedriver --version
+
+curl https://intoli.com/install-google-chrome.sh | bash
+sudo mv /usr/bin/google-chrome-stable /usr/local/bin/google-chrome
+google-chrome --version && which google-chrome
