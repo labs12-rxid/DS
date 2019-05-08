@@ -115,3 +115,5 @@ Web Service Endpoint/aws.rxidds.pwd
 Web Service Endpoint/BotoUser.credentials.csv
 BotoUser.credentials.csv
 aws.rxidds.pwd
+Web Service Endpoint/nonmatch_unique.txt
+Web Service Endpoint/vulnerablilites.txt
