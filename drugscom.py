@@ -153,32 +153,23 @@ class drugscom:
                 m1s = m1l.split()
                 m2s = m2l.split()               
                 if i == 1:
-                    if len(m1s) == len(m2s) + 1:
-                        m2s.insert(0, m2s[0]) 
-                    else:
-                        continue
+                    m2s.insert(0, m2s[0]) # dup first word (usually company name)
                 elif i == 2:
-                    if len(m1s) == 2 * len(m2s):
-                        m2s.extend(m2s)
-                    else:
-                        continue
+                    m2s.extend(m2s)  # dup MPRINTS on each side
+
                 for j in range(2):
                     if j == 1:
-                        if len(m1s) == len(m2s) + 1: 
-                            m2s.insert(0, 'logo')
-                        else:
-                            continue                      
+                        m2s.insert(0, 'logo')  
+                  
 
                     print('m1s', m1s,'i',i,'j',j)
                     print('m2s', m2s)
                     if "".join(m1s) == "".join(m2s):
-                        #             print('returning true after dupped adjustments')
-                        #             print('match',  "".join(m1s), "".join(m2s))
                         return True
 
               # test every possible starting word (don't know where left/right break is)
                     m2sq = deque(m2s)
-                    m1ss = "".join(m1l.split())
+                    m1ss = "".join(m1s)
                     for _ in range(len(m2s) - 1):
                         l = m2sq.popleft()
                         m2sq.append(l)
