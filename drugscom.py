@@ -3,6 +3,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import WebDriverException, TimeoutException
+from selenium.webdriver.common.action_chains import ActionChains
 
 from bs4 import BeautifulSoup
 import io
@@ -59,6 +60,7 @@ class drugscom:
         self.dwait = WebDriverWait(self.ddriver, 5)
         self.driver.set_window_size(850, 1600)
         self.results = []
+        self.actions = ActionChains(self.driver)
         self.shape_codes = [
             { "id": 0, "name": 'Round', 'code': 24 },
             { "id": 1, "name": 'Capsole', 'code': 5 },
@@ -227,42 +229,82 @@ class drugscom:
         elem.click()
         elem.clear()
         elem.send_keys(mprint)
-        # color = self.wait.until(EC.element_to_be_clickable(
-        #     (By.CSS_SELECTOR, "select[id='color-select']")))
-        # color.send_keys(webdriver.common.keys.Keys.SPACE)
+        # elem.send_keys(Keys.RETURN)
+
+        # color may be covered with a drugs.com pulldown without this
+        shape = self.wait.until(EC.element_to_be_clickable(
+            (By.CSS_SELECTOR, "select[id='shape-select']")))
+        shape.click()
+        time.sleep(1)
+        color_elem = self.driver.find_element(By.CSS_SELECTOR, "select[id='color-select']")
+        print('color_elem', color_elem)
+        color = self.wait.until(
+            EC.element_to_be_clickable((By.CSS_SELECTOR, "select[id='color-select']")))
+        time.sleep(1)
+        color.send_keys(Keys.RETURN)
         # color.click()
-        # color_code = 71
+        print('color.click')
+
         # self.wait.until(EC.element_to_be_clickable(
         #     (By.XPATH, "//input[@type='submit']")))
-        # target_color_elem = self.driver.find_element(
-        #     By.XPATH, f"//option[@value={color_code}]")
-        # self.driver.execute_script(
-        #     "arguments[0].scrollIntoView();", target_color_elem)
-        # time.sleep(10.5)
+        target_color_elem = color_elem.find_element(
+            By.XPATH, f"//option[@value={color_code}]")
+        print('target_color_elem found', target_color_elem)  
+        self.driver.execute_script(
+            "arguments[0].scrollIntoView();", target_color_elem)
+        target_color_elem = color_elem.find_element(
+            By.XPATH, f"//option[@value={color_code}]")
+        print('target_color_elem after scroll\n', target_color_elem)  
+        print('scroll complete')
+        self.driver.execute_script(
+            "arguments[0].click();", target_color_elem)            
+        # time.sleep(2.5)
+        print('click complete')
         # target_color_elem.click()
+        # time.sleep(0.5)
+        # print('scroll complete')
+        # target_color_elem = self.wait.until(EC.element_to_be_clickable(
+        #    (By.XPATH, f"//option[@value={color_code}]")))   
+        # print('target_color_elem found')     
+        # target_color_elem.click()
+        # self.actions.move_to_element(target_color_elem).click(target_color_elem).perform()
+        # target_color_elem.send_keys(Keys.RETURN)
+        # print('target_color_elem.click', color_code)
 
         # shape = self.wait.until(EC.element_to_be_clickable(
         #     (By.CSS_SELECTOR, "select[id='shape-select']")))
-        # shape.send_keys(webdriver.common.keys.Keys.SPACE)
-        # # color.click()
+        # print('shape selected clickable')
+        # # shape.send_keys(webdriver.common.keys.Keys.SPACE)
+        # shape.click()
+        # print('shape selected clicked')
         # # color_code = 71
         # target_shape_elem = self.driver.find_element(
         #     By.XPATH, f"//option[@value={shape_code}]")
         # self.driver.execute_script(
         #     "arguments[0].scrollIntoView();", target_shape_elem)
-        # time.sleep(10.5)
-        # target_shape_elem.click()        
-        elem.send_keys(Keys.RETURN)
+        # time.sleep(0.5)
+        # target_shape_elem = self.wait.until(
+        #     EC.element_to_be_clickable((By.XPATH, f"//option[@value={shape_code}]")))
+        # target_shape_elem.click()   
+        # print('target_shape_elem.click', shape_code)  
+        # time.sleep(5)   
+        # elem.send_keys(Keys.RETURN)
 
-        elem = self.wait.until(EC.element_to_be_clickable(
-            (By.XPATH, "//input[@type='submit']")))
-#         elem.click()
+        try:
+            elem = self.wait.until(EC.element_to_be_clickable((By.XPATH, "//input[@type='submit']")))
+            elem.click()
+        except:
+            submit = self.driver.find_element(By.XPATH, "//input[@type='submit']")
+            self.driver.execute_script("arguments[0].click();", submit) 
+            print('submit input not clickable') 
+        # self.wait.until(EC.element_to_be_clickable((By.LINK_TEXT, 'Search Again'))) 
+        print('Search Again clickable')       
         soup = BeautifulSoup(self.driver.page_source, 'html.parser')
         a = None
         mprint = None
-        with open('soup.html',"wt") as File:
-            File.write(soup.prettify())
-        allimgs = soup.find_all(By.CSS_SELECTOR, 'src')
+        # with open('soup.html',"wt") as File:
+        #     File.write(soup.prettify())
+        allimgs = soup.find_all(By.CSS_SELECTOR, 'img')
         print('allimgs len', len(allimgs))
         imgs = soup.findAll(
             lambda tag: tag.name == "img" and
@@ -292,6 +334,7 @@ class drugscom:
             break
 
         try:
+           
             elem = self.wait.until(
                 EC.element_to_be_clickable((By.LINK_TEXT, 'Search Again')))
             elem.click()
@@ -308,7 +351,9 @@ class drugscom:
             #             mprint = ' '.join(mprint.split()) # remove repeated internal spaces
             #             if not self.mprint_is_equal(mprint,pmprint):
             #                 continue
+            # time.sleep(10)
             self.ddriver.get(self.base + a['href'])
+            print(f'waiting for mprint {mprint}')
             WebDriverWait(self.ddriver, 100).until(ititle_contains(mprint))
 #             print(a.text, ' title')
             isoup = BeautifulSoup(self.ddriver.page_source, 'html.parser')
