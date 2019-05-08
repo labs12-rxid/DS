@@ -259,44 +259,39 @@ class drugscom:
         self.driver.execute_script(
             "arguments[0].click();", target_color_elem)            
         # time.sleep(2.5)
-        print('click complete')
-        # target_color_elem.click()
-        # time.sleep(0.5)
-        # print('scroll complete')
-        # target_color_elem = self.wait.until(EC.element_to_be_clickable(
-        #    (By.XPATH, f"//option[@value={color_code}]")))   
-        # print('target_color_elem found')     
-        # target_color_elem.click()
-        # self.actions.move_to_element(target_color_elem).click(target_color_elem).perform()
-        # target_color_elem.send_keys(Keys.RETURN)
-        # print('target_color_elem.click', color_code)
+        print('color click complete')
 
-        # shape = self.wait.until(EC.element_to_be_clickable(
-        #     (By.CSS_SELECTOR, "select[id='shape-select']")))
-        # print('shape selected clickable')
-        # # shape.send_keys(webdriver.common.keys.Keys.SPACE)
-        # shape.click()
-        # print('shape selected clicked')
-        # # color_code = 71
-        # target_shape_elem = self.driver.find_element(
-        #     By.XPATH, f"//option[@value={shape_code}]")
-        # self.driver.execute_script(
-        #     "arguments[0].scrollIntoView();", target_shape_elem)
-        # time.sleep(0.5)
-        # target_shape_elem = self.wait.until(
-        #     EC.element_to_be_clickable((By.XPATH, f"//option[@value={shape_code}]")))
-        # target_shape_elem.click()   
-        # print('target_shape_elem.click', shape_code)  
-        # time.sleep(5)   
-        # elem.send_keys(Keys.RETURN)
 
+        shape_elem = self.driver.find_element(By.CSS_SELECTOR, "select[id='shape-select']")
+        print('shape_elem', shape_elem)
+        shape = self.wait.until(
+            EC.element_to_be_clickable((By.CSS_SELECTOR, "select[id='shape-select']")))
+        time.sleep(1)
+        shape.send_keys(Keys.RETURN)
+        # color.click()
+        print('color.click')
+
+        target_shape_elem = shape_elem.find_element(
+            By.XPATH, f"//option[@value={shape_code}]")
+        print('target_shape_elem found', target_shape_elem)  
+        self.driver.execute_script(
+            "arguments[0].scrollIntoView();", target_shape_elem)
+        target_color_elem = color_elem.find_element(
+            By.XPATH, f"//option[@value={shape_code}]")
+        print('target_shape_elem after scroll\n', target_shape_elem)  
+        print('shape scroll complete')
+        self.driver.execute_script(
+            "arguments[0].click();", target_shape_elem)            
+        # time.sleep(2.5)
+        print('shape click complete')
+        # if the python way of clicking submit works use it, otherwise use the JavaScript way
         try:
             elem = self.wait.until(EC.element_to_be_clickable((By.XPATH, "//input[@type='submit']")))
             elem.click()
         except:
             submit = self.driver.find_element(By.XPATH, "//input[@type='submit']")
             self.driver.execute_script("arguments[0].click();", submit) 
-            print('submit input not clickable') 
+            # print('submit input not clickable') 
         # self.wait.until(EC.element_to_be_clickable((By.LINK_TEXT, 'Search Again'))) 
         print('Search Again clickable')       
         soup = BeautifulSoup(self.driver.page_source, 'html.parser')
@@ -304,8 +299,8 @@ class drugscom:
         mprint = None
         # with open('soup.html',"wt") as File:
         #     File.write(soup.prettify())
-        allimgs = soup.find_all(By.CSS_SELECTOR, 'img')
-        print('allimgs len', len(allimgs))
+        # allimgs = soup.find_all(By.CSS_SELECTOR, 'img')
+        # print('allimgs len', len(allimgs))
         imgs = soup.findAll(
             lambda tag: tag.name == "img" and
             len(tag.attrs) >= 1 and
@@ -361,12 +356,17 @@ class drugscom:
             brand = div.h1.text
             brand = brand[brand.index('(') + 1:-1]
             generic = None
+            f_generic = None
             try:
-                generic = isoup.find_all(
+                f_generic = isoup.find_all(
                     'p', {'class': 'drug-subtitle'})[0].text
-                generic = generic[14:]
+                generic = f_generic[14:]
+                print('generic', generic)
             except:
-                pass
+                print('generic error, full generic',f_generic)
+                if f_generic == None:
+                    generic = brand
+                    brand = None
             # <dt class="pid-item-title pid-item-inline">Color:</dt>
             colors = isoup.find_all('dt', string='Color:')
 #             print('colors', colors)
