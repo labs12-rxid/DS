@@ -33,8 +33,6 @@ def identify():
         results = get_drugscom(post_params)
         return jsonify(results)
     else:
-        get_params = request.get_json(force=True)
-        results = get_params
         return jsonify(results)
 
 
