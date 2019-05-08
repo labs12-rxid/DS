@@ -19,6 +19,15 @@ import json
 import html
 from string import punctuation
 from collections import deque
+from dotenv import load_dotenv
+
+load_dotenv()
+chromedriver_path = os.getenv("chromedriver_path")
+headless = (os.getenv('headless') == 'False')
+headless = False
+print('headless', headless)
+
+print('chromedriver_path', chromedriver_path)
 
 class ititle_contains(object):
     """ An expectation for checking that the title contains a case-insensitive
@@ -40,11 +49,12 @@ class drugscom:
         self.base = "https://www.drugs.com"
         chrome_options = webdriver.ChromeOptions()
         chrome_options.add_argument('--no-sandbox')
-        chrome_options.add_argument('--headless')
+        if headless:
+            chrome_options.add_argument('--headless')
         self.driver = webdriver.chrome.webdriver.WebDriver(
-            '/usr/local/bin/chromedriver', options=chrome_options)
+            chromedriver_path, options=chrome_options)
         self.ddriver = webdriver.chrome.webdriver.WebDriver(
-            '/usr/local/bin/chromedriver', options=chrome_options)
+            chromedriver_path, options=chrome_options)
         self.wait = WebDriverWait(self.driver, 5)
         self.dwait = WebDriverWait(self.ddriver, 5)
         self.driver.set_window_size(850, 1600)
@@ -110,6 +120,19 @@ class drugscom:
             {'id': 73, 'name': 'Yellow & White', 'code': 36}]
 
 
+    def get_color_code(self,id) -> int:
+        for d in self.color_codes:
+            if d['id'] == id:
+                return d['code']
+        print(f'unknown color id {id} ')
+        return 12 # white 
+
+    def get_shape_code(self,id) -> int:
+        for d in self.shape_codes:
+            if d['id'] == id:
+                return d['code']
+        print(f'unknown shape id {id} ')
+        return 0 # round       
 
     def mprint_is_equal(self, m1, m2):  # m1 is drugs.com mprint, m2 is DB mprint
             m1l = m1.lower()
@@ -169,7 +192,12 @@ class drugscom:
                         return True
             return False
 
-    def get_data(self, pmprint):
+    def get_data(self, ijo):
+        pmprint = ijo['imprint']
+        color_code = self.get_color_code(ijo['color'])
+        shape_code = self.get_shape_code(ijo['shape'])
+        print('starting get_data', pmprint, color_code, shape_code)
+
         #         self.driver.get(self.wurl)
         #         WebDriverWait(self.driver, 100).until(EC.title_contains(
         #             "Pill Identifier (Pill Finder) - Drugs.com"))
@@ -189,6 +217,7 @@ class drugscom:
                 elem = self.wait.until(
                     EC.element_to_be_clickable((By.LINK_TEXT, 'Accept')))
                 elem.click()
+                print('accept clicked')
             self.first = False
 
         mprint = pmprint
@@ -198,20 +227,32 @@ class drugscom:
         elem.click()
         elem.clear()
         elem.send_keys(mprint)
-        color = self.wait.until(EC.element_to_be_clickable(
-            (By.CSS_SELECTOR, "select[id='color-select'")))
-        color.send_keys(webdriver.common.keys.Keys.SPACE)
+        # color = self.wait.until(EC.element_to_be_clickable(
+        #     (By.CSS_SELECTOR, "select[id='color-select']")))
+        # color.send_keys(webdriver.common.keys.Keys.SPACE)
         # color.click()
-        color_code = 71
-        target_color = self.wait.until(EC.element_to_be_clickable(
-            (By.XPATH, "//input[@type='submit']")))
-        target_color_elem = self.driver.find_element(
-            By.XPATH, f"//option[@value={color_code}]")
-        self.driver.execute_script(
-            "arguments[0].scrollIntoView();", target_color_elem)
-        time.sleep(0.5)
-        target_color.click()
-        # elem.send_keys(Keys.RETURN)
+        # color_code = 71
+        # self.wait.until(EC.element_to_be_clickable(
+        #     (By.XPATH, "//input[@type='submit']")))
+        # target_color_elem = self.driver.find_element(
+        #     By.XPATH, f"//option[@value={color_code}]")
+        # self.driver.execute_script(
+        #     "arguments[0].scrollIntoView();", target_color_elem)
+        # time.sleep(10.5)
+        # target_color_elem.click()
+
+        # shape = self.wait.until(EC.element_to_be_clickable(
+        #     (By.CSS_SELECTOR, "select[id='shape-select']")))
+        # shape.send_keys(webdriver.common.keys.Keys.SPACE)
+        # # color.click()
+        # # color_code = 71
+        # target_shape_elem = self.driver.find_element(
+        #     By.XPATH, f"//option[@value={shape_code}]")
+        # self.driver.execute_script(
+        #     "arguments[0].scrollIntoView();", target_shape_elem)
+        # time.sleep(10.5)
+        # target_shape_elem.click()        
+        elem.send_keys(Keys.RETURN)
 
         elem = self.wait.until(EC.element_to_be_clickable(
             (By.XPATH, "//input[@type='submit']")))
@@ -219,20 +260,24 @@ class drugscom:
         soup = BeautifulSoup(self.driver.page_source, 'html.parser')
         a = None
         mprint = None
+        with open('soup.html',"wt") as File:
+            File.write(soup.prettify())
+        allimgs = soup.find_all(By.CSS_SELECTOR, 'src')
+        print('allimgs len', len(allimgs))
         imgs = soup.findAll(
             lambda tag: tag.name == "img" and
             len(tag.attrs) >= 1 and
             tag["src"][0:14] == '/images/pills/')
+        print('len imgs',len(imgs))
         for img in imgs:
             #             s = img['src']
             #                       print('s',s)
-            a = img.parent.parent('span', text='Pill Imprint:')[
-                0].next_sibling.next_sibling
+            a = img.parent.parent('span', text='Pill Imprint:')[0].next_sibling.next_sibling
 #             print('a', a, type(a), a.text)
             mprint = a.text
             # remove repeated internal spaces
             mprint = ' '.join(mprint.split())
-#             print('mprint', mprint)
+            print('mprint', mprint)
             if not self.mprint_is_equal(mprint, pmprint):
                 #                     print('not equal',mprint,pmprint)
                 if len(imgs) == 1:  # unique image result from drugs.com
@@ -253,6 +298,7 @@ class drugscom:
         except:
             pass
         if a == None:
+            print('null a')
             return self.results
         i = 0
         if a != None:
@@ -299,6 +345,7 @@ class drugscom:
                     self.results.append(
                         {'brand': brand, 'generic': generic, 'mprint': mprint, 'img': self.base + s,
                             'color': colors[i].next_sibling.text, 'shape': shapes[i].next_sibling.text})
+                    print(f'appending {brand} {s}')
                     break
                 except Exception as e:
                     print('error appending', repr(e))
@@ -319,18 +366,4 @@ class drugscom:
         
 #            <option value="1">Blue</option>
 #            <option value="2">Brown</option>        
-try:    
-    d = drugscom()
-    test = d.get_data("Andrx 696 120 mg")
-    test1 = d.get_data('Westward 480')
-    d.get_data('M Amphet Salts 30 mg')
-    test = d.get_data('BAYER 20')
-    test = d.get_data('BAYER 10')
-    test = d.get_data('M T6')
-    test = d.get_data('2876')
-    # print(json.dumps(test))
-    print(json.dumps(test, indent=4))
-except Exception as e:
-    print(f'error: {e}')
-finally:
-    d.close()
+
