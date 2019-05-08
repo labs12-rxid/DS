@@ -1,6 +1,6 @@
 numpy==1.15.4
 pandas
-flask
+flask>=0.12.3
 flask-cors
 flask-sqlalchemy
 python-decouple 
@@ -16,3 +16,5 @@ boto3
 opencv-python
 selenium
 beautifulsoup4
+urllib3>=1.24.2
+python-dotenv
