@@ -6,7 +6,6 @@ from flask import Flask, request, render_template, jsonify
 from joblib import load
 from flask_cors import CORS
 import pandas as pd
-import json
 
 #______ Module imports _____
 from drugscom import drugscom
@@ -25,7 +24,7 @@ CORS(application)
 def index():
     return render_template('base.html', title='Home')
 
-# ________  /identify/  route __________
+# ________  /indentify/  route __________
 # __ input  {'imprint' : 'M370',  'color' : 1,  'shape' : 6}    
 @application.route('/identify', methods=['GET', 'POST'])
 def identify():
@@ -34,8 +33,6 @@ def identify():
         results = get_drugscom(post_params)
         return jsonify(results)
     else:
-        get_params = request.get_json(force=True)
-        results = get_params
         return jsonify(results)
 
 
@@ -77,9 +74,8 @@ def get_drugscom(query_string):
     out_put=''
     d = None
     try:
-        print(query_string)
         d = drugscom()
-        d_data = d.get_data(query_string)
+        d_data = d.get_data({'imprint':'M370', 'color':12, 'shape':5})
         out_put = json.dumps(d_data, indent=4)
     except Exception as e:
         out_put = f'error: {e}'
