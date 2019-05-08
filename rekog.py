@@ -15,9 +15,7 @@ import re
 import boto3
 import numpy as np
 
-client=boto3.client('rekognition', region_name='us-east-2',
-                    aws_access_key_id = 'AKIASNTIZMKT62P6ONE4',
-                    aws_secret_access_key = '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')
+client=boto3.client('rekognition')
 
 # Text  Dectection Function
 def post_rekog(pic_url):
