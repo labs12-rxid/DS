@@ -45,7 +45,7 @@ def rxdata():
     if request.method == 'POST':
         post_params = request.get_json(force=True)
         output_info = query_sql_data(post_params)
-        return jsonify(output_info)
+        return output_info
 
     else:
         return jsonify("GET request to /rxdata :")
