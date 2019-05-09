@@ -3,6 +3,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import WebDriverException, TimeoutException
+from selenium.webdriver.common.action_chains import ActionChains
 
 from bs4 import BeautifulSoup
 import io
@@ -21,15 +22,11 @@ from string import punctuation
 from collections import deque
 from dotenv import load_dotenv
 
-load_dotenv()
-chromedriver_path = os.getenv("chromedriver_path")
-#chromedriver_path = '/usr/local/bin/chromedriver'  #  For linux
-chromedriver_path = './chromedriver'  # for  Windows
-
-headless = (os.getenv('headless') == 'False')
 headless = True
 print('headless', headless)
 
+chromedriver_path = "/usr/local/bin/chromedriver"
+#chromedriver_path = "./chromedriver"
 print('chromedriver_path', chromedriver_path)
 
 class ititle_contains(object):
@@ -62,6 +59,7 @@ class drugscom:
         self.dwait = WebDriverWait(self.ddriver, 5)
         self.driver.set_window_size(850, 1600)
         self.results = []
+        self.actions = ActionChains(self.driver)
         self.shape_codes = [
             { "id": 0, "name": 'Round', 'code': 24 },
             { "id": 1, "name": 'Capsole', 'code': 5 },
@@ -230,41 +228,78 @@ class drugscom:
         elem.click()
         elem.clear()
         elem.send_keys(mprint)
-        # color = self.wait.until(EC.element_to_be_clickable(
-        #     (By.CSS_SELECTOR, "select[id='color-select']")))
-        # color.send_keys(webdriver.common.keys.Keys.SPACE)
+        # elem.send_keys(Keys.RETURN)
+
+        # color may be covered with a drugs.com pulldown without this
+        shape = self.wait.until(EC.element_to_be_clickable(
+            (By.CSS_SELECTOR, "select[id='shape-select']")))
+        shape.click()
+        time.sleep(1)
+        color_elem = self.driver.find_element(By.CSS_SELECTOR, "select[id='color-select']")
+        print('color_elem', color_elem)
+        color = self.wait.until(
+            EC.element_to_be_clickable((By.CSS_SELECTOR, "select[id='color-select']")))
+        time.sleep(1)
+        color.send_keys(Keys.RETURN)
         # color.click()
-        # color_code = 71
+        print('color.click')
+
         # self.wait.until(EC.element_to_be_clickable(
         #     (By.XPATH, "//input[@type='submit']")))
-        # target_color_elem = self.driver.find_element(
-        #     By.XPATH, f"//option[@value={color_code}]")
-        # self.driver.execute_script(
-        #     "arguments[0].scrollIntoView();", target_color_elem)
-        # time.sleep(10.5)
-        # target_color_elem.click()
+        target_color_elem = color_elem.find_element(
+            By.XPATH, f"//option[@value={color_code}]")
+        print('target_color_elem found', target_color_elem)  
+        self.driver.execute_script(
+            "arguments[0].scrollIntoView();", target_color_elem)
+        target_color_elem = color_elem.find_element(
+            By.XPATH, f"//option[@value={color_code}]")
+        print('target_color_elem after scroll\n', target_color_elem)  
+        print('scroll complete')
+        self.driver.execute_script(
+            "arguments[0].click();", target_color_elem)            
+        # time.sleep(2.5)
+        print('color click complete')
 
-        # shape = self.wait.until(EC.element_to_be_clickable(
-        #     (By.CSS_SELECTOR, "select[id='shape-select']")))
-        # shape.send_keys(webdriver.common.keys.Keys.SPACE)
-        # # color.click()
-        # # color_code = 71
-        # target_shape_elem = self.driver.find_element(
-        #     By.XPATH, f"//option[@value={shape_code}]")
-        # self.driver.execute_script(
-        #     "arguments[0].scrollIntoView();", target_shape_elem)
-        # time.sleep(10.5)
-        # target_shape_elem.click()        
-        elem.send_keys(Keys.RETURN)
 
-        elem = self.wait.until(EC.element_to_be_clickable(
-            (By.XPATH, "//input[@type='submit']")))
-#         elem.click()
+        shape_elem = self.driver.find_element(By.CSS_SELECTOR, "select[id='shape-select']")
+        print('shape_elem', shape_elem)
+        shape = self.wait.until(
+            EC.element_to_be_clickable((By.CSS_SELECTOR, "select[id='shape-select']")))
+        time.sleep(1)
+        shape.send_keys(Keys.RETURN)
+        # color.click()
+        print('color.click')
+
+        target_shape_elem = shape_elem.find_element(
+            By.XPATH, f"//option[@value={shape_code}]")
+        print('target_shape_elem found', target_shape_elem)  
+        self.driver.execute_script(
+            "arguments[0].scrollIntoView();", target_shape_elem)
+        target_color_elem = color_elem.find_element(
+            By.XPATH, f"//option[@value={shape_code}]")
+        print('target_shape_elem after scroll\n', target_shape_elem)  
+        print('shape scroll complete')
+        self.driver.execute_script(
+            "arguments[0].click();", target_shape_elem)            
+        # time.sleep(2.5)
+        print('shape click complete')
+        # if the python way of clicking submit works use it, otherwise use the JavaScript way
+        try:
+            elem = self.wait.until(EC.element_to_be_clickable((By.XPATH, "//input[@type='submit']")))
+            elem.click()
+        except:
+            submit = self.driver.find_element(By.XPATH, "//input[@type='submit']")
+            self.driver.execute_script("arguments[0].click();", submit) 
+            # print('submit input not clickable') 
+        # self.wait.until(EC.element_to_be_clickable((By.LINK_TEXT, 'Search Again'))) 
+        print('Search Again clickable')       
         soup = BeautifulSoup(self.driver.page_source, 'html.parser')
         a = None
         mprint = None
-        allimgs = soup.find_all(By.CSS_SELECTOR, 'src')
-        print('allimgs len', len(allimgs))
+        # with open('soup.html',"wt") as File:
+        #     File.write(soup.prettify())
+        # allimgs = soup.find_all(By.CSS_SELECTOR, 'img')
+        # print('allimgs len', len(allimgs))
         imgs = soup.findAll(
             lambda tag: tag.name == "img" and
             len(tag.attrs) >= 1 and
@@ -293,6 +328,7 @@ class drugscom:
             break
 
         try:
+           
             elem = self.wait.until(
                 EC.element_to_be_clickable((By.LINK_TEXT, 'Search Again')))
             elem.click()
@@ -309,7 +345,9 @@ class drugscom:
             #             mprint = ' '.join(mprint.split()) # remove repeated internal spaces
             #             if not self.mprint_is_equal(mprint,pmprint):
             #                 continue
+            # time.sleep(10)
             self.ddriver.get(self.base + a['href'])
+            print(f'waiting for mprint {mprint}')
             WebDriverWait(self.ddriver, 100).until(ititle_contains(mprint))
 #             print(a.text, ' title')
             isoup = BeautifulSoup(self.ddriver.page_source, 'html.parser')
@@ -317,12 +355,17 @@ class drugscom:
             brand = div.h1.text
             brand = brand[brand.index('(') + 1:-1]
             generic = None
+            f_generic = None
             try:
-                generic = isoup.find_all(
+                f_generic = isoup.find_all(
                     'p', {'class': 'drug-subtitle'})[0].text
-                generic = generic[14:]
+                generic = f_generic[14:]
+                print('generic', generic)
             except:
-                pass
+                print('generic error, full generic',f_generic)
+                if f_generic == None:
+                    generic = brand
+                    brand = None
             # <dt class="pid-item-title pid-item-inline">Color:</dt>
             colors = isoup.find_all('dt', string='Color:')
 #             print('colors', colors)
@@ -355,6 +398,7 @@ class drugscom:
 #                 break
 #             print( mprint.lower(), pmprint.lower())
             i += i
+            print('!!!!!!!!!!!! S U C C E S S !!!!!!!!!!!')
             return self.results
 
     def reset(self):
@@ -367,4 +411,3 @@ class drugscom:
         
 #            <option value="1">Blue</option>
 #            <option value="2">Brown</option>        
-

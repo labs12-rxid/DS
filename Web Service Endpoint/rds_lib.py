@@ -1,23 +1,47 @@
 import psycopg2
+from psycopg2.extras import RealDictCursor
 from sqlalchemy import create_engine
+import pandas as pd
 
 
 #  _____ query and return SQL data ______________
 def query_sql_data(parameter_list):
-    engin = db_connect()
-    verify_output(engin)
-    #  echo the output for now  -- needs query code 
-    return parameter_list
+    im_print = "'"+parameter_list.get('imprint')+"'"
+    print (im_print)
+    im_print = "'WATSON;151;4;mg'"
+    db_engine = db_connect('aws.rxidds.pwd')
+    schema_name = 'rxid'
+    table_name = 'rxid_meds_data'
+    table_string = schema_name + '.' + table_name 
+    query = """
+            SELECT
+                    author,
+                    splimprint,
+                    image_id,
+                    medicine_name,
+                    splsize,
+                    splcolor_text,
+                    splshape_text,
+                    product_code,
+                    DEA_SCHEDULE_CODE,
+                    splscore,
+                    setid
+                    FROM """ + table_string + """ WHERE splimprint LIKE """ + im_print + """
+            LIMIT 25;"""
+    results = db_engine.execute(query).fetchall()
+    df = pd.DataFrame(results, columns=['author', 'imprint', 'image_id', 'medicine_name', 'size', 'color_text', 'shape_text', 'product_code', 'DEA_schedule', 'score', 'setid' ])
+    results_json = df.to_json(orient='records')
+    return results_json
 
 
 #  ____________  CONNECT TO DATABASE ___________________
-def db_connect():
+def db_connect(pwd_file): 
     # __ Connect to AWS-RDS(postgres) (SQLalchemy.create_engine) ____
     dbname = ''
     user = ''
     host = ''
-    password = ''
-    file = open('aws.rxidds.pwd', 'r')
+    passw = ''
+    file = open(pwd_file, 'r')
     ctr = 1
     for line in file:
         line = line.replace('\n', '')
@@ -37,7 +61,39 @@ def verify_output(pgres_engine):
     schema_name = 'rxid'
     table_name = 'rxid_meds_data'
     table_string = schema_name + '.' + table_name 
-    query = 'SELECT * FROM ' + table_string + ' LIMIT 10;'
-    for row in pgres_engine.execute(query).fetchall():
-        print(row)
-    return
+    
+    # Query in JSON format for each row in SQL:
+    # https://stackoverflow.com/questions/25564654/select-query-in-row-to-json-function
+    # Name of relevant columns based on pillbox results (col_name = pillbox_label):
+        # splimprint = imprint, medicine_name = name, setid = drug label,
+        # spl_strength = ingredients, author = label author, splsize = size, 
+        # splscore = score, spl_inactive_ing = inactive ingredients, product_code = product code
+    im_print = "'WATSON;151;4;mg'"
+
+    query = """
+            SELECT
+                    author,
+                    splimprint,
+                    image_id,
+                    medicine_name,
+                    splsize,
+                    splcolor_text,
+                    splshape_text,
+                    product_code,
+                    DEA_SCHEDULE_CODE,
+                    splscore,
+                    setid
+                    FROM """ + table_string + """ WHERE splimprint LIKE """ + im_print + """
+            LIMIT 25;"""
+
+    results = pgres_engine.execute(query).fetchall()
+    print(results)
+    return 
+
+# __________ M A I N ________________________
+if __name__ == '__main__':
+    #engine = db_connect('aws.rxidds.pwd')
+    #verify_output(engine)
+
+    print(query_sql_data({"imprint":"WATSON;151;4;mg", "color": 12 , "shape": 5 }))
+
