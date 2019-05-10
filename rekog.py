@@ -41,7 +41,8 @@ def post_rekog(pic_json):
     
     # Looping through each image
     for imageURL in imageURL_list:
-        ctr = 10000
+    ctr = 10000
+    for imageURL in imageURL_list:
         if imageURL != "":
             # Saving image URL locally
             ctr += 1
@@ -100,4 +101,4 @@ def post_rekog(pic_json):
 
 # __________ M A I N ________________________
 if __name__ == '__main__':
-    print(post_rekog({"image_file": "./sample_pill_image.jpg"}))
+   print('Main')

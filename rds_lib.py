@@ -32,7 +32,7 @@ def query_sql_data(parameter_list):
     results = db_engine.execute(query).fetchall()
     # Passing SQL query into a Pandas DF
     df = pd.DataFrame(results, columns=['author', 'imprint', 'image_id', 'medicine_name', 'size', 'color_text', 'shape_text', 'product_code', 'DEA_schedule', 'score', 'setid' ])
-    # Adding '.jpg' to image_id's
+    # Adding '.jpg' to image_id's and ignoring when it's None
     df.loc[df['image_id'] != None, 'image_id'] += '.jpg'
     # Passing DF to JSON
     results_json = df.to_json(orient='records')
