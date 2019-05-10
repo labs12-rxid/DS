@@ -307,7 +307,9 @@ class drugscom:
                 markdown += '<li>' + li.text.replace('\n','') + '</li>' + n    
             markdown += '</ul>'
             p = ul.next_sibling.next_sibling
-            markdown += str(p)
+            s = str(p).replace('\n', '')
+            print(f'text at the bottom of Incidence Not Known |{s}|')
+            markdown += s
             markdown += "<h3>More Common</h3><ul>"
             ul = p.parent.find_all('ul')[3]   
             for li in ul.find_all('li'):
