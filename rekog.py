@@ -40,15 +40,18 @@ def post_rekog(pic_json):
     all_text = []
     
     # Looping through each image
+    ctr = 10000
     for imageURL in imageURL_list:
         if imageURL != "":
             # Saving image URL locally
-            urllib.request.urlretrieve(imageURL, "00000001.jpg")
-            imageFile='./00000001.jpg'
-            # print(f'imageFile: {imageFile}')
+            ctr += 1
+            temp_img = str(ctr) + ".jpg"
+            urllib.request.urlretrieve(imageURL, temp_img)
+            imageFile = './' + temp_img
             
             # Opening locally saved 'imageFile'
             with open(imageFile, 'rb') as image:
+                # !!!!!!  WRAP THIS IN A TRY / CATCH !!!!!!!!!
                 response = client.detect_text(Image={'Bytes': image.read()})
 
             # Detected Text (List of Dictionaries)
@@ -91,10 +94,10 @@ def post_rekog(pic_json):
     if len(unique_list) == 0:
         unique_list = ['Unable to detect text']
 
-    # Return 'unique_list' as JSON    
-    return json.dumps(unique_list)
+    # Return 'unique_list'    
+    return (unique_list)
 
 
 # __________ M A I N ________________________
 if __name__ == '__main__':
-    print(post_rekog({"image_file": "./sample_pill_image.jpg"}))
+   print('Main')
