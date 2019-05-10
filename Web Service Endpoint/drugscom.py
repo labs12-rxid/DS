@@ -25,8 +25,8 @@ from dotenv import load_dotenv
 headless = True
 print('headless', headless)
 
-chromedriver_path = "/usr/local/bin/chromedriver"
-#chromedriver_path = "./chromedriver"
+#chromedriver_path = "/usr/local/bin/chromedriver"
+chromedriver_path = "./chromedriver"
 print('chromedriver_path', chromedriver_path)
 
 class ititle_contains(object):
@@ -62,7 +62,7 @@ class drugscom:
         self.actions = ActionChains(self.driver)
         self.shape_codes = [
             { "id": 0, "name": 'Round', 'code': 24 },
-            { "id": 1, "name": 'Capsole', 'code': 5 },
+            { "id": 1, "name": 'Capsule', 'code': 5 },
             { "id": 2, "name": 'Oval',"code": 20 },
             { "id": 3, "name": 'Egg',"code":  9 },
             { "id": 4, "name": 'Barrel',"code": 1 },
