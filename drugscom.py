@@ -159,8 +159,8 @@ class drugscom:
 
                 for j in range(2):  
 
-                    print('m1s', m1s,'i',i,'j',j)
-                    print('m2s', m2s)
+                    # print('m1s', m1s,'i',i,'j',j)
+                    # print('m2s', m2s)
                     if "".join(m1s) == "".join(m2s):
                         return True
 
@@ -172,7 +172,7 @@ class drugscom:
                         m2sq.append(l)
                         if j == 1:
                             m2sq.insert(0,'logo')
-                        print('rotate',m1ss,m2sq)
+                        # print('rotate',m1ss,m2sq)
                         if m1ss == "".join(m2sq):
                             return True
                         if j == 1:
@@ -226,6 +226,102 @@ class drugscom:
         # time.sleep(2.5)
         print('shape click complete')
 
+
+    def make_mark_down(self, isoup) -> str:
+        markdown = ''
+        n = ''
+        try:
+            h1 = isoup.find_all('h1')[0]
+            title = h1.text
+            markdown += '<h1>' + title.strip() + '</h1>' + n
+            generic = None
+            try:
+                generic = h1.parent.p.i.text
+            except:
+                pass
+            if generic != None:
+                markdown += '<h2>Generic</h2> ' + generic + n
+        #     ins = isoup.findAll(
+        #         lambda tag: tag.name == "h2" and
+        #         tag.text == 'In Summary')[0] 
+            ins = isoup.find('h2', string='In Summary')
+        #     if ins == None:
+        #         print('ins == None')
+        # #         ins = isoup.find('h2', string='For the Consumer')
+        #         ins = isoup.find('h2')
+        #     print(f'ins.text |{ins.text}|')
+
+        #     print(type(ins))
+            p = None
+            if ins != None:
+                ins_ = ins.parent.find_all('b')[3].parent.text
+            #     print('ins_',ins_,type(ins_))
+                ins__ = ins_[6:].replace('may not', '<i>may not</i>')
+                markdown += '<p><h2>Note</h2></p> ' + ins__
+                ss =  "Common side effects of "
+                p = isoup.findAll(
+                    lambda tag: tag.name == "b" and
+                    len(tag.text) > len(ss) and
+                    tag.text[0:len(ss)] == ss)
+                if p != None:
+                    if len(p) > 0:
+                        p = p[0].parent
+                    else:
+                        p = None
+            if p != None:
+                markdown += '<h2>In Summary</h2>' + str(p) + n
+        #     p = p.parent.findAll(
+        #         lambda tag: tag.name == "h2" and
+        #         tag.text.index('For the Consumer') >= 0)[0].parent.find('p')
+                p = p.parent.find('h2', string="For the Consumer")
+               # <h2>For the Consumer</h2> 
+            if p == None:
+                ss = "For the Consumer"
+                try: 
+                    p = isoup.findAll(
+                        lambda tag: tag.name == "h2" and
+                        len(tag.text) >= len(ss) and
+                        tag.text.find(ss) >= 0)[0]
+                except:
+                    p = isoup.find('h2')
+                    print('For the Consumer not found in ', p.text)
+            markdown += str(p) + n
+            # Applies to tadalafil : oral tablet
+            markdown += '<p>' + p.parent.find_all('p')[4].text.replace('\n','') + '</p>' + n 
+        #     div = p.parent.find('div', 'class': ["contentAd contentAdM1 contentAdAlone"]>
+            markdown += '<p>' + p.parent.find_all('p')[5].text.replace('\n','') + '</p>' + n 
+            p6 = str(p.parent.find_all('p')[6])
+
+            if p6.find('\n') >= 0:
+                p6 = p6.replace('\n','') 
+
+            markdown += p6 + n
+            markdown += '<h3>Less Common</h3><ul>'
+            ul = p.parent.find_all('ul')[2]
+            for li in ul.find_all('li'):
+                markdown += '<li>' + li.text.replace('\n','') + '</li>' + n    
+            markdown += '</ul>'
+            markdown += "<h3>Incidence Not Known</h3><ul>"
+            ul = p.parent.find_all('ul')[3]
+            for li in ul.find_all('li'):
+                markdown += '<li>' + li.text.replace('\n','') + '</li>' + n    
+            markdown += '</ul>'
+            p = ul.next_sibling.next_sibling
+            markdown += str(p)
+            markdown += "<h3>More Common</h3><ul>"
+            ul = p.parent.find_all('ul')[3]   
+            for li in ul.find_all('li'):
+                markdown += '<li>' + li.text.replace('\n','') + '</li>' + n    
+            markdown += '</ul><h3>Less Common</h3><ul>'  
+            ul = p.parent.find_all('ul')[4]   
+            for li in ul.find_all('li'):
+                markdown += '<li>' + li.text.replace('\n','') + '</li>' + n    
+            markdown += '</ul>'
+        except Exception as e:
+            print('error making markdown', repr(e))
+            print(f'Error on line {sys.exc_info()[-1].tb_lineno}')
+            return None        
+        return markdown 
 
     def get_data(self, ijo):
         pmprint = ijo['imprint']
@@ -297,6 +393,7 @@ class drugscom:
         for img in imgs:
             #             s = img['src']
             #                       print('s',s)
+            print('type!!', type(img.parent.parent))
             a = img.parent.parent('span', text='Pill Imprint:')[0].next_sibling.next_sibling
 #             print('a', a, type(a), a.text)
             mprint = a.text
@@ -359,22 +456,43 @@ class drugscom:
                     brand = None
             # <dt class="pid-item-title pid-item-inline">Color:</dt>
             colors = isoup.find_all('dt', string='Color:')
-#             print('colors', colors)
+            print('colors', colors)
             shapes = isoup.find_all('dt', string='Shape:')
+            print('shapes', shapes)
 #             imgs = isoup.find_all('img')
 #             print('imgs len',len(imgs))
             imgs = isoup.findAll(
                 lambda tag: tag.name == "img" and
                 len(tag.attrs) >= 1 and
                 tag["src"][0:14] == '/images/pills/')
-#             print('imgs length', len(imgs))
+            print('imgs length', len(imgs))
 #             print('brand', brand, 'generic', generic, mprint, )
             for img in imgs:
                 #                   print('img', img)
                 try:
                     s = img['src']
-                    # a = isoup.find_next('a', string='Side Effects')
-                    # self.ddriver.get(self.base + a['href'])
+                    a = isoup.find_all('a', string='Side Effects')[0]
+                    # ul = isoup.find_all('ul', {'class': ['more-resources-list', 'more-resources-list-general']})
+                    # print('len ul',len(ul))
+                    # if len(ul) > 0:
+                    #     li = ul[0].find('li')
+                    #     if li != None:
+                    #         print('li text', li.text)
+        
+                    # with open('isoup.html',"wt") as File:
+                    #     File.write(isoup.prettify())
+                    
+                    print('side effects a href',a['href'])
+                    self.ddriver.get(self.base + a['href'])
+                    print('side effects page title', self.ddriver.title)
+                    WebDriverWait(self.ddriver, 100).until(ititle_contains('Side Effects in Detail'))
+                    isoup = BeautifulSoup(self.ddriver.page_source, 'html.parser')
+                    with open('./html/' + generic + '.html',"wt") as File:
+                        File.write(isoup.prettify())
+                    mark_down = self.make_mark_down(isoup)
+                    print('mark_down i:', i)
+                    print(colors[i].next_sibling.text)
+                    print(shapes[i].next_sibling.text)
 
                     # #                       print('s',s)
                     #                     if s[0:14] == '/images/pills/':
@@ -382,12 +500,14 @@ class drugscom:
                     #                         self.img = base + s
                     self.results.append(
                         {'brand': brand, 'generic': generic, 'mprint': mprint, 'img': self.base + s,
-                            'color': colors[i].next_sibling.text, 'shape': shapes[i].next_sibling.text})
-                    print(f'appending {brand} {s}')
+                            'color': colors[i].next_sibling.text, 'shape': shapes[i].next_sibling.text,
+                            'side effects': mark_down
+                            })
+                    print(f'appending {brand} {s} {len(self.results)} results' )
                     break
                 except Exception as e:
                     print('error appending', repr(e))
-                    pass
+                    break
 #             if self.mprint_is_equal(mprint,pmprint) & appended: # works because drugs.com puts matching mprint first
 #                 break
 #             print( mprint.lower(), pmprint.lower())
