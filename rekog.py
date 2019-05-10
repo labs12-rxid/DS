@@ -30,21 +30,24 @@ client=boto3.client('rekognition', region_name=reg_ion,
 
 # Text  Dectection Function
 def post_rekog(pic_json):
-       
+    
     # Getting list of image file names
-    image_list = pic_json.get("image_locations")
-    # print(f'image_list {image_list}')
+    imageURL_list = pic_json.get("image_locations")
+    # print(f'imageURL_list {imageURL_list}')
     
     # Empty list to contain list(s) of text blob(s) extracted with "Rekognition"
     # Will contain a list per side (2 lists)
     all_text = []
     
     # Looping through each image
-    for imageFile in image_list:
-        
-        if imageFile != "":
-            print(f'imageFile: {imageFile}')
-
+    for imageURL in imageURL_list:
+        if imageURL != "":
+            # Saving image URL locally
+            urllib.request.urlretrieve(imageURL, "00000001.jpg")
+            imageFile='./00000001.jpg'
+            # print(f'imageFile: {imageFile}')
+            
+            # Opening locally saved 'imageFile'
             with open(imageFile, 'rb') as image:
                 response = client.detect_text(Image={'Bytes': image.read()})
 
@@ -69,27 +72,27 @@ def post_rekog(pic_json):
         else:
             continue
             
-        # Flattening 'all_text' (list of lists) into 1 list
-        text_list = [blob for sublist in all_text for blob in sublist]
-        text_list = list(set(text_list))
-        # print(f'text_list: {text_list}')
+    # Flattening 'all_text' (list of lists) into 1 list
+    text_list = [blob for sublist in all_text for blob in sublist]
+    text_list = list(set(text_list))
+    # print(f'text_list: {text_list}')
 
-        # Splitting any text blob that may have digits and numbers together
-        unique_list = []
-        for each in text_list:
-            num_split = re.findall(r'[A-Za-z]+|\d+', each)
-            unique_list.append(num_split)
+    # Splitting any text blob that may have digits and numbers together
+    unique_list = []
+    for each in text_list:
+        num_split = re.findall(r'[A-Za-z]+|\d+', each)
+        unique_list.append(num_split)
 
-        # Flattening again into one list with just unique values
-        unique_list = [blob for sublist in unique_list for blob in sublist]
-        unique_list = list(set(unique_list))
-        # print(len(unique_list))
+    # Flattening again into one list with just unique values
+    unique_list = [blob for sublist in unique_list for blob in sublist]
+    unique_list = list(set(unique_list))
+    # print(len(unique_list))
 
-        if len(unique_list) == 0:
-            unique_list = ['Unable to detect text']
+    if len(unique_list) == 0:
+        unique_list = ['Unable to detect text']
 
-        # Return 'unique_list' as JSON    
-        return json.dumps(unique_list)
+    # Return 'unique_list' as JSON    
+    return json.dumps(unique_list)
 
 
 # __________ M A I N ________________________
