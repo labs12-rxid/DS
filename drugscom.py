@@ -487,8 +487,8 @@ class drugscom:
                     print('side effects page title', self.ddriver.title)
                     WebDriverWait(self.ddriver, 100).until(ititle_contains('Side Effects in Detail'))
                     isoup = BeautifulSoup(self.ddriver.page_source, 'html.parser')
-                    with open('./html/' + generic + '.html',"wt") as File:
-                        File.write(isoup.prettify())
+                    # with open('./html/' + generic + '.html',"wt") as File:
+                    #     File.write(isoup.prettify())
                     mark_down = self.make_mark_down(isoup)
                     print('mark_down i:', i)
                     print(colors[i].next_sibling.text)
