@@ -153,38 +153,30 @@ class drugscom:
                 m1s = m1l.split()
                 m2s = m2l.split()               
                 if i == 1:
-                    if len(m1s) == len(m2s) + 1:
-                        m2s.insert(0, m2s[0]) 
-                    else:
-                        continue
+                    m2s.insert(0, m2s[0]) # dup first word (usually company name)
                 elif i == 2:
-                    if len(m1s) == 2 * len(m2s):
-                        m2s.extend(m2s)
-                    else:
-                        continue
-                for j in range(2):
-                    if j == 1:
-                        if len(m1s) == len(m2s) + 1: 
-                            m2s.insert(0, 'logo')
-                        else:
-                            continue                      
+                    m2s.extend(m2s)  # dup MPRINTS on each side
+
+                for j in range(2):  
 
                     print('m1s', m1s,'i',i,'j',j)
                     print('m2s', m2s)
                     if "".join(m1s) == "".join(m2s):
-                        #             print('returning true after dupped adjustments')
-                        #             print('match',  "".join(m1s), "".join(m2s))
                         return True
 
               # test every possible starting word (don't know where left/right break is)
                     m2sq = deque(m2s)
-                    m1ss = "".join(m1l.split())
+                    m1ss = "".join(m1s)
                     for _ in range(len(m2s) - 1):
                         l = m2sq.popleft()
                         m2sq.append(l)
+                        if j == 1:
+                            m2sq.insert(0,'logo')
                         print('rotate',m1ss,m2sq)
                         if m1ss == "".join(m2sq):
                             return True
+                        if j == 1:
+                            m2sq.popleft() # remove 'logo' 
             return False
 
     def select_color(self, color_code):
@@ -273,9 +265,9 @@ class drugscom:
         # elem.send_keys(Keys.RETURN)
 
         # color may be covered with a drugs.com pulldown without this
-        shape = self.wait.until(EC.element_to_be_clickable(
-            (By.CSS_SELECTOR, "select[id='shape-select']")))
-        shape.click()
+        side_target = self.wait.until(EC.element_to_be_clickable(
+            (By.CSS_SELECTOR, "img[src='/img/pillid/example.png']")))
+        side_target.click()
 
         self.select_color(color_code)
         self.select_shape(shape_code)
@@ -381,6 +373,9 @@ class drugscom:
                 #                   print('img', img)
                 try:
                     s = img['src']
+                    # a = isoup.find_next('a', string='Side Effects')
+                    # self.ddriver.get(self.base + a['href'])
+
                     # #                       print('s',s)
                     #                     if s[0:14] == '/images/pills/':
                     #                          print('found img', s, ' mprint ', mprint)
@@ -397,15 +392,17 @@ class drugscom:
 #                 break
 #             print( mprint.lower(), pmprint.lower())
             i += i
-            return self.results
+            return json.dumps(self.results, indent=4)
 
     def reset(self):
+        del self.results
         self.results = []
 
     def close(self):
         self.driver.quit()
         self.ddriver.quit()
         self.nonmatch_unique_file.close()
+        del self.results
         
 #            <option value="1">Blue</option>
 #            <option value="2">Brown</option>        
