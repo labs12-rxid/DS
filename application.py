@@ -11,14 +11,16 @@ import json
 # ______ Module imports _____
 from drugscom import drugscom
 from rxid_util import parse_input
-from rds_lib import db_connect, query_sql_data, verify_output
+from rds_lib import db_connect, query_sql_data, query_from_rekog
 from rekog import post_rekog
 
-drugs_com = drugscom()
 
 """ create + config Flask app obj """
 application = Flask(__name__)
 CORS(application)
+
+drugs_com = drugscom()
+
 
 # ______________ R O U T E S  _____________________
 # ________ / HOME __________
@@ -26,7 +28,7 @@ CORS(application)
 def index():
     return render_template('base.html', title='Home')
 
-# ________  /indentify/  route __________
+# ________  /identify/  route __________
 # __ input  {'imprint' : 'M370',  'color' : 1,  'shape' : 6}    
 @application.route('/identify', methods=['GET', 'POST'])
 def identify():
@@ -57,8 +59,9 @@ def rekog():
     if request.method == 'POST':
         post_params = request.get_json(force=True)
         # https://s3.amazonaws.com/labs12-rxidstore/reference/00002-3228-30_391E1C80.jpg
-        output_info = post_rekog(post_params)
-        return jsonify(output_info)
+        rekog_info = post_rekog(post_params)
+        output_info = query_from_rekog(rekog_info)
+        return output_info
     else:
         return jsonify("YOU just made a GET request to /rekog")
 
@@ -70,7 +73,6 @@ def nnet():
         return jsonify(post_params)
     else:
         return jsonify("YOU just made a GET request to /nnet")
-
 
 # ___________________ FUNCTIONS ________________________________
 def get_drugscom(query_string):
@@ -89,6 +91,7 @@ def get_drugscom(query_string):
 # __________ M A I N ________________________
 if __name__ == '__main__':
     application.run(debug=False)
+
 
     # --- browser debugging
     # application.run(debug=True)
