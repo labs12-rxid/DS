@@ -29,42 +29,72 @@ client=boto3.client('rekognition', region_name=reg_ion,
                     aws_secret_access_key=secret_key)
 
 # Text  Dectection Function
-def post_rekog(pic_url):
-    url = pic_url.get("image_file")
-    urllib.request.urlretrieve(url, "./00000001.jpg")
-    imageFile='./00000001.jpg'
+def post_rekog(pic_json):
     
-    with open(imageFile, 'rb') as image:
-        response = client.detect_text(Image={'Bytes': image.read()})
+    # Getting list of image file names
+    imageURL_list = pic_json.get("image_locations")
+    # print(f'imageURL_list {imageURL_list}')
     
-    # Detected Text (List of Dictionaries)
-    textDetections=response['TextDetections']
-
-    # Parsing Through Detected Text and 
-    # Making list of Unique Sets of Text Dectected
-    text_found = []
-
-    for text in textDetections:
-        if text['Confidence'] > 87:
-            text_found.append(text['DetectedText'])
-
-    text_set = list(set(text_found))
-#     print(text_set)
+    # Empty list to contain list(s) of text blob(s) extracted with "Rekognition"
+    # Will contain a list per side (2 lists)
+    all_text = []
     
+    # Looping through each image
+    for imageURL in imageURL_list:
+        if imageURL != "":
+            # Saving image URL locally
+            urllib.request.urlretrieve(imageURL, "00000001.jpg")
+            imageFile='./00000001.jpg'
+            # print(f'imageFile: {imageFile}')
+            
+            # Opening locally saved 'imageFile'
+            with open(imageFile, 'rb') as image:
+                response = client.detect_text(Image={'Bytes': image.read()})
+
+            # Detected Text (List of Dictionaries)
+            textDetections=response['TextDetections']
+
+            # Parsing Through Detected Text and 
+            # Making list of Unique Sets of Text Dectected
+            text_found = []
+
+            for text in textDetections:
+                if text['Confidence'] > 87:
+                    text_found.append(text['DetectedText'])
+                    # print(text['Confidence'])
+            # print(f'text_found: {text_found}')
+            
+            text_set = list(set(text_found))
+
+            # Appending detected text in image to "all_text" list
+            all_text.append(text_set)
+        
+        else:
+            continue
+            
+    # Flattening 'all_text' (list of lists) into 1 list
+    text_list = [blob for sublist in all_text for blob in sublist]
+    text_list = list(set(text_list))
+    # print(f'text_list: {text_list}')
+
     # Splitting any text blob that may have digits and numbers together
     unique_list = []
-#     for each in text_list:
-    for each in text_set:
+    for each in text_list:
         num_split = re.findall(r'[A-Za-z]+|\d+', each)
         unique_list.append(num_split)
-        
+
     # Flattening again into one list with just unique values
     unique_list = [blob for sublist in unique_list for blob in sublist]
     unique_list = list(set(unique_list))
-#     print(len(unique_list))
-    
+    # print(len(unique_list))
+
     if len(unique_list) == 0:
         unique_list = ['Unable to detect text']
-    
+
     # Return 'unique_list' as JSON    
     return json.dumps(unique_list)
+
+
+# __________ M A I N ________________________
+if __name__ == '__main__':
+    print(post_rekog({"image_file": "./sample_pill_image.jpg"}))
