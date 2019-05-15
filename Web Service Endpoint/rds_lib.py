@@ -113,7 +113,7 @@ def query_sql_data(parameter_list):
                     author,
                     splimprint,
                     image_id,
-                    medicine_name,
+                    spl_strength,
                     splsize,
                     splcolor_text,
                     splshape_text,
@@ -163,6 +163,12 @@ def query_sql_data(parameter_list):
     #print(query)
     results = db_engine.execute(query).fetchall()
     df = pd.DataFrame(results, columns=['author', 'imprint', 'image_id', 'medicine_name', 'size', 'color_text', 'shape_text', 'product_code', 'DEA_schedule', 'score', 'setid' ])
+    
+    
+    
+    
+    
+    
     df.loc[df['image_id'] != None, 'image_id'] += '.jpg'
     results_json = df.to_json(orient='records')
     return results_json
@@ -219,7 +225,7 @@ def verify_output(pgres_engine):
 
 # __________ M A I N ________________________
 if __name__ == '__main__':
-    print(query_sql_data({"pill_name": "PANTO"  ,"imprint": "H;126", "color": 13 , "shape": 20}))
+    print(query_sql_data({"pill_name": ""  ,"imprint": "H;126", "color": 13 , "shape": 20}))
 
 
 
