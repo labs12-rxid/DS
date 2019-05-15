@@ -1,107 +1,113 @@
 """
 Main application and routing logic
 """
+# _____ imports _____________
 from flask import Flask, request, render_template, jsonify
 from joblib import load
 from flask_cors import CORS
-import datetime
 import pandas as pd
-import pytz
-from pytz import timezone
-import calendar
+import json
+import atexit
+
+# ______ Module imports _____
+from drugscom import drugscom
+from rxid_util import parse_input
+from rds_lib import db_connect, query_sql_data, query_from_rekog
+from rekog import post_rekog
+
 
 """ create + config Flask app obj """
 application = Flask(__name__)
 CORS(application)
 
+drugs_com = drugscom()
 
+def close_drugs_com():
+    print('started closing')
+    if drugs_com != None:
+        print('closing drugs_com')
+        drugs_com.close()
+
+atexit.register(close_drugs_com)
+
+# ______________ R O U T E S  _____________________
+# ________ / HOME __________
 @application.route('/')
 def index():
     return render_template('base.html', title='Home')
 
-"""
---->>>> FIELDS NEEDED TO identify <<<<---
-"""
-
-@application.route('/identify/<query_str>')
-def identify(query_str):
-    return "You just passed me this as a query string: "+ query_str 
-
-
-# FUNCTION TO GET CURRENT DAY AND HOUR -- TO INCLUDE IN .py SCRIPT
-def day_hour():
-    # get current time in pacific timezone for prediction
-    #   we're prediction for CA only right now
-    utc = pytz.utc
-    utc.zone
-    pacific = timezone('US/Pacific')
-    
-    #  bin the current hour
-    time = datetime.datetime.today().astimezone(pacific)    
-    hour = (time.hour)
-    if hour <= 4:
-        hour = 1
-    elif 4 > hour <= 8:
-        hour = 2
-    elif 8 > hour <= 12:
-        hour = 3
-    elif 12 > hour <= 16:
-        hour = 4
-    elif 16 > hour <= 20:
-        hour = 5
+# ________  /identify/  route __________
+# __ input  {'imprint' : 'M370',  'color' : 1,  'shape' : 6}    
+@application.route('/identify', methods=['GET', 'POST'])
+def identify():
+    if request.method == 'POST':
+        post_params = request.get_json(force=True)
+        results = get_drugscom(post_params)
+        return results
     else:
-        hour = 6
-
-    # Day of the week
-    weekday = time.isoweekday()
-    d = {1: 'MONDAY', 2: 'TUESDAY', 3: 'WEDNESDAY', 4: 'THURSDAY', 
-        5: 'FRIDAY', 6: 'SATURDAY', 7: 'SUNDAY'}
-    for key, value in d.items():
-        if key == weekday:
-            weekday = value
-    return weekday, hour
+        return jsonify("GET request to /identify :")
 
 
-# FUNCTION TO parse API input string for parameters 
-#  input->  sample API input string(s)-> /indentify/param1=Red&param2=Pill
-#  ouputs -->  
-def parse_input(s):
+# ________  /rxdata/  route __________
+# __ {'imprint' : 'M370',  'color' : 1,  'shape' : 6}    
+@application.route('/rxdata', methods=['GET', 'POST'])
+def rxdata():
+    if request.method == 'POST':
+        post_params = request.get_json(force=True)
+        output_info = query_sql_data(post_params)
+        return output_info
 
-    weekday, hour = day_hour()
+    else:
+        return jsonify("GET request to /rxdata :")
 
-    # parse input string for model input values
-    weather_str = ''
-    weather_loc = s.find("weather=") # returns -1 if not found
-    if weather_loc > 0:
-        weather_str = s[s.find("weather=")+8:s.find("&",weather_loc)]
 
-    day_str = ''
-    day_loc = s.find("day=")
-    if day_loc > 0:
-        day_str = s[day_loc+4:s.find("&",day_loc)]
+# ________  /rekog/  route __________
+@application.route('/rekog', methods=['GET', 'POST'])
+def rekog():
+    if request.method == 'POST':
+        post_params = request.get_json(force=True)
+        # https://s3.amazonaws.com/labs12-rxidstore/reference/00002-3228-30_391E1C80.jpg
+        rekog_info = post_rekog(post_params)
+        output_info = query_from_rekog(rekog_info)
+        return output_info
+    else:
+        return jsonify("YOU just made a GET request to /rekog")
 
-    month_num = 1
-    month_loc = s.find("month=")
-    if month_loc > 0:
-        month_str = s[month_loc+7:s.find("&",month_loc)]
-        month_str = s.find()
-        month_num = 1
-        month_dict = dict((v,k) for k,v in enumerate(calendar.month_name))
-        for key, value in month_dict.items():
-            if key == month_str:
-                month_num = value
-    
+# ________  /nnet/  route __________
+@application.route('/nnet', methods=['GET', 'POST'])
+def nnet():
+    if request.method == 'POST':
+        post_params = request.get_json(force=True)
+        return jsonify(post_params)
+    else:
+        return jsonify("YOU just made a GET request to /nnet")
 
+# ___________________ FUNCTIONS ________________________________
+def get_drugscom(query_string):
+    out_put = ''
+    try:
+        d_data = drugs_com.get_data(query_string)
+        out_put = json.dumps(d_data, indent=4)
+    except Exception as e:
+        out_put = f'error: {e}'
+    finally:
+        if drugs_com is not None: 
+            drugs_com.reset()
+    return out_put
+
+
+# __________ M A I N ________________________
 if __name__ == '__main__':
     application.run(debug=False)
 
+
     # --- browser debugging
-    #application.run(debug=True)
+    # application.run(debug=True)
 
     #  --- for terminal debugging ------
-    #input_str = 'RED PILL'
-    #print(predict(input_str))
-
+    # results = get_drugscom()
+    # print(results)
+# __________________________________________________
 # to launch from terminal : 
 #    change line 25 to  application.run(debug=True)
 #    cd to folder (where application.py resides)
