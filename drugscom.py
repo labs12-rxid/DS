@@ -66,7 +66,7 @@ class drugscom:
         self.actions = ActionChains(self.driver)
         self.shape_codes = [
             {"id": 0, "name": 'Round', 'code': 24},
-            {"id": 1, "name": 'Capsole', 'code': 5},
+            {"id": 1, "name": 'Capsule', 'code': 5},
             {"id": 2, "name": 'Oval', "code": 20},
             {"id": 3, "name": 'Egg', "code":  9},
             {"id": 4, "name": 'Barrel', "code": 1},
@@ -194,7 +194,10 @@ class drugscom:
         self.shape_map = {
             'oval': ['egg', 'elliptical / oval'],
             'egg': ['oval',' elliptical / oval'],
-            'capsule': ['capsule-shape']
+            'capsule': ['capsule-shape'],
+            'square': ['four-sided', 'rectangle'],
+            'rectangle': ['square', 'four-sided'],
+            'four-sided': ['rectangle']
             }
     def get_color_code(self, id) -> int:
         for d in self.color_codes:
@@ -496,8 +499,8 @@ class drugscom:
         soup = BeautifulSoup(self.driver.page_source, 'html.parser')
         a = None
         mprint = None
-        with open('soup.html',"wt") as File:
-            File.write(soup.prettify())
+        # with open('soup.html',"wt") as File:
+        #     File.write(soup.prettify())
         # allimgs = soup.find_all(By.CSS_SELECTOR, 'img')
         # print('allimgs len', len(allimgs))
         for pgno in range(1,6):
@@ -577,6 +580,7 @@ class drugscom:
             #             if not self.mprint_is_equal(mprint,pmprint):
             #                 continue
             # time.sleep(10)
+            print("ddriver getting details page a['href']", a['href'])
             self.ddriver.get(self.base + a['href'])
             print(f'waiting for mprint {mprint}')
             WebDriverWait(self.ddriver, 100).until(ititle_contains(mprint))
