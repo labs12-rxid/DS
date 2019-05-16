@@ -173,5 +173,5 @@ def post_rekog(pic_json):
 
 
 # __________ M A I N ________________________
-if __name__ == '__main__':
-   print('Main')
+#if __name__ == '__main__':
+#   print('hello')
