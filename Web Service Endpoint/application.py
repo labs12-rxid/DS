@@ -7,7 +7,6 @@ from joblib import load
 from flask_cors import CORS
 import pandas as pd
 import json
-import atexit
 
 # ______ Module imports _____
 from drugscom import drugscom
@@ -22,13 +21,6 @@ CORS(application)
 
 drugs_com = drugscom()
 
-def close_drugs_com():
-    print('started closing')
-    if drugs_com != None:
-        print('closing drugs_com')
-        drugs_com.close()
-
-atexit.register(close_drugs_com)
 
 # ______________ R O U T E S  _____________________
 # ________ / HOME __________
@@ -92,7 +84,7 @@ def get_drugscom(query_string):
         out_put = f'error: {e}'
     finally:
         if drugs_com is not None: 
-            drugs_com.reset()
+            drugs_com.close()
     return out_put
 
 
