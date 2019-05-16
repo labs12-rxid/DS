@@ -2,6 +2,9 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 from sqlalchemy import create_engine
 import pandas as pd
+from itertools import permutations
+import json
+
 
 shape_codes = [
         { "id": 0, "name": 'Round', 'code': 24 },
@@ -67,19 +70,19 @@ color_codes = [{'id': 0, 'name': 'Beige', 'code': 14}, {'id': 1, 'name': 'Black'
 
 # ______query_from rekog __________
 def query_from_rekog(rekog_results):
-    rekog_1 = rekog_results[0] + ";" + rekog_results[1]
-    rekog_2 = rekog_results[1] + ";" + rekog_results[0]
-    qry_r1 = query_sql_data({"pill_name": "", "imprint": rekog_1, "color": 0, "shape": 0})
-    qry_r2 = query_sql_data({"pill_name": "", "imprint": rekog_2, "color": 0, "shape": 0})
-    if qry_r1 == '[]':
-        qry_r = qry_r2
+    if len(rekog_results) > 1:
+        results = [x for x in list(map(";".join, permutations(rekog_results)))]
     else:
-        qry_r = qry_r1
-        if qry_r2 == '[]':
-            pass
+        results = rekog_results
+
+    total_results= []
+    for result in results:
+        qry_r = query_sql_data({"pill_name": "", "imprint": result, "color": 0, "shape": 0})
+        if qry_r == '':
+            continue
         else:
-            qry_r = (qry_r1 + qry_r2)
-    return qry_r
+            total_results.append(qry_r)
+    return total_results
 
 #  _____ query and return SQL data ______________
 def query_sql_data(parameter_list):
@@ -114,13 +117,14 @@ def query_sql_data(parameter_list):
                     splimprint,
                     image_id,
                     spl_strength,
+                    spl_ingredients,
                     splsize,
                     splcolor_text,
                     splshape_text,
                     product_code,
                     DEA_SCHEDULE_CODE,
-                    splscore,
-                    setid
+                    setid,
+                    spl_inactive_ing
                     FROM """ + table_string + """ 
                 WHERE """
     
@@ -150,8 +154,7 @@ def query_sql_data(parameter_list):
         query = query +" medicine_name LIKE '%%"+pill_name.upper()+"%%'"
         ctr +=1
 
-    query = query + " LIMIT 25;"         
-
+    query = query + " LIMIT 25;"       
     """
         WHERE splimprint  LIKE ''       im_print
         AND splshape_text LIKE 'OVAL'   shape_text
@@ -160,18 +163,22 @@ def query_sql_data(parameter_list):
         ----use double %% for wildcards!!!!!----
         AND medicine_name LIKE '%%PANTO%%'  pill_name
     """
-    #print(query)
     results = db_engine.execute(query).fetchall()
-    df = pd.DataFrame(results, columns=['author', 'imprint', 'image_id', 'medicine_name', 'size', 'color_text', 'shape_text', 'product_code', 'DEA_schedule', 'score', 'setid' ])
-    
-    
-    
-    
-    
-    
+    df = pd.DataFrame(results, columns=['author', 
+                                        'imprint',
+                                        'image_id',
+                                        'spl_strength',
+                                        'medicine_name',
+                                        'size',
+                                        'color_text',
+                                        'shape_text',
+                                        'product_code',
+                                        'DEA_schedule',
+                                        'setid',
+                                        'spl_inactive_ing' ])
     df.loc[df['image_id'] != None, 'image_id'] += '.jpg'
     results_json = df.to_json(orient='records')
-    return results_json
+    return results_json[1:-1]
 
 
 #  ____________  CONNECT TO DATABASE ___________________
@@ -195,37 +202,6 @@ def db_connect(pwd_file):
     return pgres_engine
 
 
-# ________  SQL Queries ______
-def verify_output(pgres_engine):
-    # ______  verify output-table contents ____
-    schema_name = 'rxid'
-    table_name = 'rxid_meds_data'
-    table_string = schema_name + '.' + table_name 
-    im_print = "'WATSON;151;4;mg'"
-
-    query = """
-            SELECT
-                    author,
-                    splimprint,
-                    image_id,
-                    medicine_name,
-                    splsize,
-                    splcolor_text,
-                    splshape_text,
-                    product_code,
-                    DEA_SCHEDULE_CODE,
-                    splscore,
-                    setid
-                    FROM """ + table_string + """ WHERE splimprint LIKE """ + im_print + """
-            LIMIT 25;"""
-
-    results = pgres_engine.execute(query).fetchall()
-    print(results)
-    return
-
 # __________ M A I N ________________________
 if __name__ == '__main__':
-    print(query_sql_data({"pill_name": ""  ,"imprint": "H;126", "color": 13 , "shape": 20}))
-
-
-
+    print(query_from_rekog(['126']))
