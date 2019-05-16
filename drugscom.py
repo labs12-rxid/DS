@@ -22,6 +22,8 @@ from string import punctuation
 from collections import deque
 from dotenv import load_dotenv
 
+debug = False
+
 load_dotenv()
 chromedriver_path = os.getenv("chromedriver_path")
 headless = (os.getenv('headless') == 'False')
@@ -337,103 +339,27 @@ class drugscom:
         print('shape click complete')
 
     def make_mark_down(self, isoup) -> str:
-        markdown = ''
-        n = ''
         try:
-            h1 = isoup.find_all('h1')[0]
-            title = h1.text
-            markdown += '<h1>' + title.strip() + '</h1>' + n
-            generic = None
-            try:
-                generic = h1.parent.p.i.text
-            except:
-                pass
-            if generic != None:
-                markdown += '<h2>Generic</h2> ' + generic + n
-        #     ins = isoup.findAll(
-        #         lambda tag: tag.name == "h2" and
-        #         tag.text == 'In Summary')[0]
-            ins = isoup.find('h2', string='In Summary')
-        #     if ins == None:
-        #         print('ins == None')
-        # #         ins = isoup.find('h2', string='For the Consumer')
-        #         ins = isoup.find('h2')
-        #     print(f'ins.text |{ins.text}|')
-
-        #     print(type(ins))
-            p = None
-            if ins != None:
-                ins_ = ins.parent.find_all('b')[3].parent.text
-            #     print('ins_',ins_,type(ins_))
-                ins__ = ins_[6:].replace('may not', '<i>may not</i>')
-                markdown += '<p><h2>Note</h2></p> ' + ins__
-                ss = "Common side effects of "
-                p = isoup.findAll(
-                    lambda tag: tag.name == "b" and
-                    len(tag.text) > len(ss) and
-                    tag.text[0:len(ss)] == ss)
-                if p != None:
-                    if len(p) > 0:
-                        p = p[0].parent
-                    else:
-                        p = None
-            if p != None:
-                markdown += '<h2>In Summary</h2>' + str(p) + n
-        #     p = p.parent.findAll(
-        #         lambda tag: tag.name == "h2" and
-        #         tag.text.index('For the Consumer') >= 0)[0].parent.find('p')
-                p = p.parent.find('h2', string="For the Consumer")
-               # <h2>For the Consumer</h2>
-            if p == None:
-                ss = "For the Consumer"
-                try:
-                    p = isoup.findAll(
-                        lambda tag: tag.name == "h2" and
-                        len(tag.text) >= len(ss) and
-                        tag.text.find(ss) >= 0)[0]
-                except:
-                    p = isoup.find('h2')
-                    print('For the Consumer not found in ', p.text)
-            markdown += str(p) + n
-            # Applies to tadalafil : oral tablet
-            markdown += '<p>' + p.parent.find_all('p')[4].text.replace('\n', '') + '</p>' + n
-        #     div = p.parent.find('div', 'class': ["contentAd contentAdM1 contentAdAlone"]>
-            markdown += '<p>' + p.parent.find_all('p')[5].text.replace('\n', '') + '</p>' + n
-            p6 = str(p.parent.find_all('p')[6])
-
-            if p6.find('\n') >= 0:
-                p6 = p6.replace('\n', '')
-
-            markdown += p6 + n
-            markdown += '<h3>Less Common</h3><ul>'
-            ul = p.parent.find_all('ul')[2]
-            for li in ul.find_all('li'):
-                markdown += '<li>' + li.text.replace('\n', '') + '</li>' + n
-            markdown += '</ul>'
-            markdown += "<h3>Incidence Not Known</h3><ul>"
-            ul = p.parent.find_all('ul')[3]
-            for li in ul.find_all('li'):
-                markdown += '<li>' + li.text.replace('\n', '') + '</li>' + n
-            markdown += '</ul>'
-            p = ul.next_sibling.next_sibling
-            s = str(p).replace('\n', '')
-            print(f'text at the bottom of Incidence Not Known |{s}|')
-            markdown += s
-            markdown += "<h3>More Common</h3><ul>"
-            ul = p.parent.find_all('ul')[3]
-            for li in ul.find_all('li'):
-                markdown += '<li>' + li.text.replace('\n', '') + '</li>' + n
-            markdown += '</ul><h3>Less Common</h3><ul>'
-            ul = p.parent.find_all('ul')[4]
-            for li in ul.find_all('li'):
-                markdown += '<li>' + li.text.replace('\n', '') + '</li>' + n
-            markdown += '</ul>'
+            for a in isoup.select('a'):
+                # insert sup tag after the span
+                # span = isoup.new_tag('span')
+                # span.string = a.text.replace('\n', '')
+                # a.insert_after(span)
+                # replace the a tag with it's contents
+                a.unwrap()
+            for div in isoup.find_all('div', {'class': 'contentAd'}):
+                print('removing contentAd div')
+                div.decompose()
+            for ins in isoup.find_all('ins', {'class': 'display-ad' }):
+                print('removing ins')
+                ins.decompose()
+            return str(isoup).replace('\n','')
         except Exception as e:
             print('error making markdown', repr(e))
             print(f'Error on line {sys.exc_info()[-1].tb_lineno}')
             return None
-        return markdown
 
+                 
     def get_data(self, ijo):
         pmprint = ijo['imprint']
 
@@ -481,21 +407,41 @@ class drugscom:
             (By.CSS_SELECTOR, "img[src='/img/pillid/example.png']")))
         side_target.click()
 
+        print('send enter for submit skipped')
+        submit = self.driver.find_element(
+            By.XPATH, "//input[@type='submit']")
+        print('submit found')
+
         self.select_color(color_code)
         self.select_shape(shape_code)
 
         # if the python way of clicking submit works use it, otherwise use the JavaScript way
-        try:
-            elem = self.wait.until(EC.element_to_be_clickable(
-                (By.XPATH, "//input[@type='submit']")))
-            elem.click()
-        except:
-            submit = self.driver.find_element(
-                By.XPATH, "//input[@type='submit']")
-            self.driver.execute_script("arguments[0].click();", submit)
+        # try:
+        #     elem = self.wait.until(EC.element_to_be_clickable(
+        #         (By.XPATH, "//input[@type='submit']")))
+        #     elem.send_keys(Keys.RETURN)
+        #     print('send enter for submit succeeded')
+        # except:
+        time.sleep(1.5)
+        # self.driver.execute_script(
+        #     """
+        #     const ke = new KeyboardEvent("keydown", {
+        #         bubbles: true, cancelable: true, keyCode: 13
+        #     });
+        #     arguments[0].dispatchEvent(ke);
+        #     const ku = new KeyboardEvent("keyup", {
+        #         bubbles: true, cancelable: true, keyCode: 13
+        #     });
+        #     arguments[0].dispatchEvent(ku);            
+        #     """
+        #     , submit)
+        self.driver.execute_script("arguments[0].click();", submit)
             # print('submit input not clickable')
         # self.wait.until(EC.element_to_be_clickable((By.LINK_TEXT, 'Search Again')))
-        print('Search Again clickable')
+        print('Search Again clickable, driver.refresh')
+        self.driver.refresh()
+        print('driver.refresh done')
+        time.sleep(1.5)
         soup = BeautifulSoup(self.driver.page_source, 'html.parser')
         a = None
         mprint = None
@@ -579,9 +525,17 @@ class drugscom:
             #             mprint = ' '.join(mprint.split()) # remove repeated internal spaces
             #             if not self.mprint_is_equal(mprint,pmprint):
             #                 continue
-            # time.sleep(10)
+            time.sleep(0.5)
             print("ddriver getting details page a['href']", a['href'])
-            self.ddriver.get(self.base + a['href'])
+            for i in range(0,3):
+                try:
+                    self.ddriver.get(self.base + a['href'])
+                    break
+                except:
+                    if i == 2:
+                        print("can't get details page")
+                        raise Exception(f"getting details page {a['href']} failed")
+                    time.sleep(1)
             print(f'waiting for mprint {mprint}')
             WebDriverWait(self.ddriver, 100).until(ititle_contains(mprint))
 #             print(a.text, ' title')
@@ -634,11 +588,27 @@ class drugscom:
                     print('side effects page title', self.ddriver.title)
                     WebDriverWait(self.ddriver, 100).until(
                         ititle_contains('Side Effects in Detail'))
-                    isoup = BeautifulSoup(
-                        self.ddriver.page_source, 'html.parser')
-                    # with open('./html/' + generic + '.html',"wt") as File:
-                    #     File.write(isoup.prettify())
+                    side_effects_html = self.ddriver.page_source
+                    h2ftc = '<h2>For the Consumer</h2>'
+                    ftc = side_effects_html.find(h2ftc)
+                    fhp = side_effects_html.find('<h2 id="for-professionals">')
+                    assert ftc > 0  and fhp > 0, 'h2 not found'
+                    print('ftc',ftc,'fhp', fhp)
+                    if ftc == -1:
+                        ftc = 0
+                    else:
+                        ftc += len(h2ftc)
+                    if fhp == -1:
+                        fhp = len(side_effects_html)                                                
+                    isoup = BeautifulSoup(side_effects_html[ftc:fhp], 'html.parser')
+                    if debug:
+                        with open('./html/' + generic + '.html',"wt") as File:
+                            File.write(isoup.prettify())
                     mark_down = self.make_mark_down(isoup)
+                    if debug:
+                        if mark_down != None:
+                            with open('./html/' + generic + '.result.html',"wt") as File:
+                                File.write(mark_down)                    
                     print('mark_down i:', i)
                     print(colors[i].next_sibling.text)
                     print(shapes[i].next_sibling.text)
