@@ -40,7 +40,6 @@ def post_rekog(pic_json):
     all_text = []
     
     # Looping through each image
-    for imageURL in imageURL_list:
     ctr = 10000
     for imageURL in imageURL_list:
         if imageURL != "":
@@ -92,13 +91,13 @@ def post_rekog(pic_json):
     unique_list = list(set(unique_list))
     # print(len(unique_list))
 
-    if len(unique_list) == 0:
-        unique_list = ['Unable to detect text']
+    #if len(unique_list) == 0:
+    #    unique_list = ['Unable to detect text']
 
     # Return 'unique_list'    
     return (unique_list)
 
 
 # __________ M A I N ________________________
-if __name__ == '__main__':
-   print('Main')
+#if __name__ == '__main__':
+#   print('hello')

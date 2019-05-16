@@ -25,8 +25,8 @@ from dotenv import load_dotenv
 headless = True
 print('headless', headless)
 
-#chromedriver_path = "/usr/local/bin/chromedriver"
-chromedriver_path = "./chromedriver"
+chromedriver_path = "/usr/local/bin/chromedriver"
+#chromedriver_path = "./chromedriver"
 print('chromedriver_path', chromedriver_path)
 
 class ititle_contains(object):
