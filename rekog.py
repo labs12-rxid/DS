@@ -66,7 +66,6 @@ def post_rekog(pic_json):
     # ------------- text read from image(s) with contrast filter -------------
     all_filter_text = []
     
-    # ------------- Looping through image(s) -------------
     ctr1 = 10000
     ctr2 = 10001
     for imageURL in imageURL_list:
