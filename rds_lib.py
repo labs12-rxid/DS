@@ -8,7 +8,6 @@ from dotenv import load_dotenv
 import os
 
 load_dotenv()
-
 shape_codes = [
         { "id": 0, "name": 'Round', 'code': 24 },
         { "id": 1, "name": 'Capsule', 'code': 5 },
@@ -151,7 +150,6 @@ def query_sql_data(parameter_list):
             query = query + " AND "
         query = query +" splcolor_text LIKE " + "'"+col_or+"'" 
         ctr +=1
-
     if pill_name == '' or pill_name == 'None':
         pass
     else:
@@ -267,4 +265,4 @@ def get_colors_shapes():
 
 # __________ M A I N ________________________
 if __name__ == '__main__':
-    print(query_from_rekog(['126']))
+    print(query_from_rekog(['H', '126']))
