@@ -1,4 +1,5 @@
 '''
+
 Python Script to detect imprinted text on pill images using AWS Rekognition.
 Set up for passing just 1 image. 
 Will need to be refactored to pass 2 images based on URL or JSON given by WEB.
@@ -12,23 +13,21 @@ import json
 import re
 import boto3
 import numpy as np
+from dotenv import load_dotenv
+import os
 
-key_id = ''
-secret_key = ''
-reg_ion = ''
-file = open('aws.rekog.pwd', 'r')
-ctr = 1
-for line in file:
-    line = line.replace('\n', '')
-    if ctr == 1: key_id = line
-    if ctr == 2: secret_key = line
-    if ctr == 3: reg_ion = line
-    ctr = ctr + 1
+load_dotenv()
+
+key_id = os.getenv("AWS_ACCESS_KEY_ID")
+secret_key = os.getenv("AWS_SECRET_ACCESS_KEY")
+reg_ion = os.getenv("AWS_DEFAULT_REGION")
+
 client=boto3.client('rekognition', region_name=reg_ion,
                     aws_access_key_id=key_id,
                     aws_secret_access_key=secret_key)
 
 # Text  Dectection Function
+
 def post_rekog(pic_json):
     
     # Getting list of image file names
@@ -94,10 +93,15 @@ def post_rekog(pic_json):
     #if len(unique_list) == 0:
     #    unique_list = ['Unable to detect text']
 
+
     # Return 'unique_list'    
     return (unique_list)
 
 
 # __________ M A I N ________________________
-#if __name__ == '__main__':
-#   print('hello')
+if __name__ == '__main__':
+    data = {"image_locations": ["https://raw.githubusercontent.com/ed-chin-git/ed-chin-git.github.io/master/sample_pill_image.jpg", ""]}
+    print(post_rekog(data))
+    
+
+

@@ -4,7 +4,10 @@ from sqlalchemy import create_engine
 import pandas as pd
 from itertools import permutations
 import json
+from dotenv import load_dotenv
+import os
 
+load_dotenv()
 
 shape_codes = [
         { "id": 0, "name": 'Round', 'code': 24 },
@@ -28,7 +31,6 @@ shape_codes = [
         { "id": 18, "name": 'Diamand',"code": 7 },
         { "id": 19, "name": 'Square',"code": 28 },
 ]
-
 
 color_codes = [{'id': 0, 'name': 'Beige', 'code': 14}, {'id': 1, 'name': 'Black', 'code': 73},
         {'id': 2, 'name': 'Blue', 'code': 1}, {'id': 3, 'name': 'Brown', 'code': 2},
@@ -77,7 +79,7 @@ def query_from_rekog(rekog_results):
 
     total_results= []
     for result in results:
-        qry_r = query_sql_data({"pill_name": "", "imprint": result, "color": 0, "shape": 0})
+        qry_r = query_sql_data({"pill_name": "", "imprint": result, "color": "", "shape": ""})
         if qry_r == '':
             continue
         else:
@@ -88,26 +90,26 @@ def query_from_rekog(rekog_results):
 def query_sql_data(parameter_list):
     im_print = parameter_list.get('imprint')
     pill_name = parameter_list.get('pill_name')
-
     sha_pe = parameter_list.get('shape')
-    if sha_pe==0 or sha_pe=='None':
-        shape_text = None
-    else:
-        for i in range(len(shape_codes)):
-            if shape_codes[i].get("code") == sha_pe:
-                dict_index = i
-        shape_text = shape_codes[dict_index].get("name").upper()
-
     col_or = parameter_list.get('color')
-    if col_or == 0 or col_or == 'None':
-        color_text = None
-    else:
-        for i in range(len(color_codes)):
-            if color_codes[i].get("code") == col_or:
-                dict_index = i
-        color_text = color_codes[dict_index].get("name").upper()
 
-    db_engine = db_connect('aws.rxidds.pwd')
+    # if sha_pe==0 or sha_pe=='None':
+    #     shape_text = None
+    # else:
+    #     for i in range(len(shape_codes)):
+    #         if shape_codes[i].get("code") == sha_pe:
+    #             dict_index = i
+    #     shape_text = shape_codes[dict_index].get("name").upper()
+
+    # if col_or == 0 or col_or == 'None':
+    #     color_text = None
+    # else:
+    #     for i in range(len(color_codes)):
+    #         if color_codes[i].get("code") == col_or:
+    #             dict_index = i
+    #     color_text = color_codes[dict_index].get("name").upper()
+
+    db_engine = db_connect()
     schema_name = 'rxid'
     table_name = 'rxid_meds_data'
     table_string = schema_name + '.' + table_name 
@@ -135,15 +137,19 @@ def query_sql_data(parameter_list):
             query = query + " AND "
         query = query +" UPPER(splimprint) LIKE '%%" + im_print.upper()+"%%'"
         ctr +=1
-    if shape_text is not None or sha_pe > 0:
+    if sha_pe == "" or sha_pe == "None" :
+        pass
+    else:        
         if ctr>0:
             query = query + " AND "
-        query = query +" splshape_text LIKE " + "'"+shape_text+"'" 
+        query = query +" splshape_text LIKE " + "'"+sha_pe+"'" 
         ctr +=1
-    if color_text is not None or col_or > 0 :
+    if col_or == "" or col_or == "None":
+        pass
+    else:
         if ctr>0:
             query = query + " AND "
-        query = query +" splcolor_text LIKE " + "'"+color_text+"'" 
+        query = query +" splcolor_text LIKE " + "'"+col_or+"'" 
         ctr +=1
 
     if pill_name == '' or pill_name == 'None':
@@ -182,25 +188,82 @@ def query_sql_data(parameter_list):
 
 
 #  ____________  CONNECT TO DATABASE ___________________
-def db_connect(pwd_file): 
+def db_connect(): 
     # __ Connect to AWS-RDS(postgres) (SQLalchemy.create_engine) ____
-    dbname = ''
-    user = ''
-    host = ''
-    passw = ''
-    file = open(pwd_file, 'r')
-    ctr = 1
-    for line in file:
-        line = line.replace('\n', '')
-        if ctr == 1: dbname = line
-        if ctr == 2: user = line
-        if ctr == 3: host = line
-        if ctr == 4: passw = line
-        ctr = ctr + 1
+    dbname = os.getenv("DS_DB_NAME")
+    user = os.getenv("DS_DB_USER")
+    host = os.getenv("DS_DB_HOST")
+    passw = os.getenv("DS_DB_PASSWORD")
     pgres_str = 'postgresql+psycopg2://'+user+':'+passw+'@'+host+'/'+dbname
     pgres_engine = create_engine(pgres_str)
     return pgres_engine
 
+# ______  return colors, shapes list in reponse to GET request from /rxdata
+def get_colors_shapes():
+    out_put = { "valid_colors": ['GREEN', 'WHITE', 'BLUE;BLUE', 'ORANGE', 'YELLOW', 'PURPLE',
+       'BROWN', 'RED', 'PINK', 'ORANGE;GREEN', 'BLUE', 'RED;WHITE;YELLOW',
+       'GRAY;YELLOW', 'GRAY', 'PINK;WHITE', 'PINK;BROWN', 'GRAY;GRAY',
+       'RED;BLUE;PURPLE', 'YELLOW;WHITE', 'WHITE;BLUE', 'PINK;GREEN',
+       'WHITE;WHITE', 'PURPLE;YELLOW', 'GREEN;WHITE', 'BLACK',
+       'BLUE;GRAY;BLUE', 'RED;WHITE', 'ORANGE;WHITE', 'BLUE;PINK',
+       'WHITE;GREEN', 'WHITE;BROWN', 'YELLOW;BLUE', 'BLUE ', 'WHITE;PINK',
+       'YELLOW;GREEN;RED;ORANGE', 'PINK;ORANGE;YELLOW', 'WHITE;ORANGE',
+       'GREEN;ORANGE;PINK;YELLOW', 'GRAY;PINK', 'BLUE;GRAY',
+       'GRAY;ORANGE', 'YELLOW;ORANGE;WHITE;RED', 'ORANGE;RED',
+       'YELLOW;PINK', 'RED;GREEN;ORANGE;YELLOW', 'BLUE;GREEN',
+       'BLUE;WHITE', 'GREEN;BLUE', 'WHITE;RED', 'ORANGE;ORANGE',
+       'PINK;YELLOW', 'BROWN;BROWN', 'GREEN;YELLOW', 'RED;GREEN',
+       'PURPLE;TURQUOISE', 'YELLOW;YELLOW', 'BROWN;WHITE', 'BLUE;ORANGE',
+       'YELLOW;GRAY', 'ORANGE;RED;PURPLE', 'PURPLE;WHITE', 'ORANGE;GRAY',
+       'ORANGE;PINK;YELLOW', 'TURQUOISE;WHITE', 'RED;BROWN',
+       'WHITE;YELLOW', 'YELLOW;BROWN', 'BLUE;YELLOW', 'PINK;PINK',
+       'PINK;BLACK', 'YELLOW;PINK;ORANGE', 'ORANGE;BLUE', 'TURQUOISE',
+       'GREEN;GREEN', 'WHITE;PURPLE', 'GREEN;ORANGE', 'RED;RED',
+       'YELLOW;BLACK', 'RED;ORANGE', 'BLUE;BROWN', 'GRAY;GREEN',
+       'BLUE;BLACK', 'PURPLE;PINK', 'GREEN;BLUE;WHITE', 'PINK;BLUE',
+       'BROWN;YELLOW', 'PINK;BLUE;PINK', 'YELLOW;PURPLE', 'YELLOW;RED',
+       'GRAY;BROWN', 'GREEN;BROWN', 'PINK;BLUE;PURPLE', 'PURPLE;PURPLE',
+       'PINK;WHITE;RED', 'BROWN;ORANGE', 'WHITE;TURQUOISE', 'BROWN;PINK',
+       'WHITE;RED;ORANGE;YELLOW', 'BLUE;PURPLE', 'RED;BLUE;GRAY',
+       'RED;GREEN;YELLOW;ORANGE', 'ORANGE;YELLOW', 'GRAY;WHITE',
+       'PINK;RED', 'GRAY;RED', 'YELLOW;GREEN', 'YELLOW;ORANGE',
+       'RED;PINK', 'RED;YELLOW;GREEN;ORANGE', 'BLACK;GREEN',
+       'YELLOW;ORANGE;RED;PURPLE', 'GRAY;RED;PURPLE;ORANGE', 'WHITE ',
+       'YELLOW;ORANGE;PINK;GREEN', 'ORANGE;YELLOW;GREEN;PINK',
+       'GRAY;PURPLE', 'RED;BLUE', 'ORANGE;BROWN',
+       'PINK;ORANGE;YELLOW;GREEN', 'WHITE;GRAY', 'GREEN;PINK',
+       'RED;YELLOW', 'ORANGE;PINK;PURPLE', 'GRAY;BLUE',
+       'YELLOW;PINK;GREEN', 'BLACK;YELLOW', 'ORANGE;PURPLE',
+       'GREEN;PURPLE', 'PINK;PINK;PURPLE', 'PINK;ORANGE;YELLOW;WHITE',
+       'BROWN;GRAY', 'BLUE;TURQUOISE', 'RED;GRAY', 'PURPLE;ORANGE',
+       'WHITE;BLACK', 'GREEN;RED', 'BLACK;PURPLE', 'RED;PINK;PURPLE',
+       'BROWN;GREEN', 'PURPLE;BLUE', 'BLUE;RED', 'BROWN;RED',
+       'RED;PURPLE', 'BROWN;PURPLE', 'GREEN;TURQUOISE;WHITE',
+       'PURPLE;GRAY', 'ORANGE;PINK', 'ORANGE;YELLOW;PINK', 'C48325',
+       'GREEN;GRAY', 'PINK;YELLOW;ORANGE', 'GREEN;WHITE;YELLOW',
+       'RED;GRAY;BLUE', 'BLACK;WHITE', 'PINK;ORANGE',
+       'RED;ORANGE;YELLOW;GREEN', 'ORANGE ', 'YELLOW;GREEN;ORANGE;RED',
+       'GRAY ;BROWN ', 'GRAY;BLACK', 'GRAY;RED;ORANGE', 'PINK;GRAY',
+       'GREEN;BLACK', 'WHITE;GREEN;BLUE', 'BLUE;PURPLE;WHITE',
+       'ORANGE ;ORANGE ', 'TURQUOISE;PINK', 'PINK;YELLOW;ORANGE;PINK',
+       'PINK;RED;BLUE', 'TURQUOISE;TURQUOISE', 'BLACK;PINK',
+       'RED;YELLOW;ORANGE;GREEN', 'YELLOW;ORANGE;PINK',
+       'ORANGE;YELLOW;RED', 'BLUE;PINK;PURPLE', 'WHITE;RED;GREEN',
+       'YELLOW ', 'BROWN ', 'YELLOW;RED;ORANGE;WHITE', 'BROWN;BLUE',
+       'ORANGE;RED;YELLOW;PURPLE', 'YELLOW;ORANGE;RED;GREEN',
+       'PINK;WHITE;BLUE', 'YELLOW;RED;ORANGE', 'RED;PURPLE;YELLOW;ORANGE',
+       'TURQUOISE;BLUE', 'PINK;ORANGE;YELLOW;RED', 'C48329',
+       'YELLOW;PINK;ORANGE;WHITE', 'PURPLE;BLUE;GRAY', 'BROWN;TURQUOISE',
+       'PURPLE;RED', 'PURPLE;GREEN', 'BLUE;GREEN;PINK',
+       'RED;YELLOW;ORANGE', 'RED;PURPLE;GRAY',
+       'BLUE;ORANGE;YELLOW;PURPLE', 'PINK;ORANGE;PURPLE', 
+       'PINK;TURQUOISE', 'C48328', 'WHITE;ORANGE;YELLOW;RED',
+       'RED;ORANGE;WHITE;YELLOW', 'C48327', 'GRAY;RED;PURPLE', 'RED '],
+       "valid_shapes": ['ROUND', 'OVAL', 'CAPSULE', 'DIAMOND', 'TRIANGLE',
+       'PENTAGON (5 SIDED)', 'HEXAGON (6 SIDED)', 'RECTANGLE', 'BULLET',
+       'FREEFORM', 'SQUARE', 'OCTAGON (8 SIDED)', 'TRAPEZOID',
+       'DOUBLE CIRCLE', 'TEAR', 'SEMI-CIRCLE', 'CLOVER'] } 
+    return out_put
 
 # __________ M A I N ________________________
 if __name__ == '__main__':

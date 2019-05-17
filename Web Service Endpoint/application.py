@@ -8,23 +8,23 @@ from flask_cors import CORS
 import pandas as pd
 import json
 import asyncio
-import atexit
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
 
 # ______ Module imports _____
-from drugscom import drugscom
+# from drugscom import drugscom
 from rxid_util import parse_input
-from rds_lib import db_connect, query_sql_data, query_from_rekog
+from rds_lib import db_connect, query_sql_data, query_from_rekog, get_colors_shapes
 from rekog import post_rekog
-
-
-
 
 """ create + config Flask app obj """
 application = Flask(__name__)
 CORS(application)
 
-drugs_com = drugscom()
-atexit.register(close_drugs_com)
+#drugs_com = drugscom()
 
 # ______________ R O U T E S  _____________________
 # ________ / HOME __________
@@ -34,14 +34,14 @@ def index():
 
 # ________  /identify/  route __________
 # __ input  {'imprint' : 'M370',  'color' : 1,  'shape' : 6}    
-@application.route('/identify', methods=['GET', 'POST'])
-def identify():
-    if request.method == 'POST':
-        post_params = request.get_json(force=True)
-        results = get_drugscom(post_params)
-        return results
-    else:
-        return jsonify("GET request to /identify :")
+# @application.route('/identify', methods=['GET', 'POST'])
+# def identify():
+#     if request.method == 'POST':
+#         post_params = request.get_json(force=True)
+#         results = get_drugscom(post_params)
+#         return results
+#     else:
+#         return jsonify("GET request to /identify :")
 
 
 # ________  /rxdata/  route __________
@@ -54,16 +54,16 @@ def rxdata():
         return jsonify(output_info)
 
     else:
-        return jsonify("YOU just made a GET request to /rxdata")
-
+        out_put = get_colors_shapes()
+        return jsonify(out_put)
 
 # ________  /rekog/  route __________
 @application.route('/rekog', methods=['GET', 'POST'])
-async def rekog():
+def rekog():
     if request.method == 'POST':
         post_params = request.get_json(force=True)
         rekog_info = post_rekog(post_params)
-        await output_info = query_from_rekog(rekog_info)
+        output_info = query_from_rekog(rekog_info)
         return jsonify(output_info)
     else:
         return jsonify("YOU just made a GET request to /rekog")
@@ -87,15 +87,27 @@ def get_drugscom(query_string):
         out_put = f'error: {e}'
     finally:
         if drugs_com is not None: 
-            drugs_com.reset()
+            drugs_com.close()
     return out_put
 
-def close_drugs_com():
-    print('started closing')
-    if drugs_com != None:
-        print('closing drugs_com')
-        drugs_com.close()
 
 # __________ M A I N ________________________
 if __name__ == '__main__':
     application.run(debug=False)
+
+    # post_params = data = {"image_locations": ["https://raw.githubusercontent.com/ed-chin-git/ed-chin-git.github.io/master/sample_pill_image.jpg", ""]}
+    # rekog_info = post_rekog(post_params)
+    # output_info = query_from_rekog(rekog_info)
+    # print(output_info)
+
+    # --- browser debugging
+    # application.run(debug=True)
+
+    #  --- for terminal debugging ------
+    # results = get_drugscom()
+    # print(results)
+# __________________________________________________
+# to launch from terminal : 
+#    change line 25 to  application.run(debug=True)
+#    cd to folder (where application.py resides)
+#    run >python application.py 
