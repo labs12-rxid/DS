@@ -86,8 +86,7 @@ def nnet():
 def get_drugscom(query_string):
     out_put = ''
     try:
-        d_data = drugs_com.get_data(query_string)
-        out_put = json.dumps(d_data, indent=4)
+        out_put = drugs_com.get_data(query_string)
     except Exception as e:
         out_put = f'error: {e}'
     finally:
