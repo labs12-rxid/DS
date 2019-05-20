@@ -6,6 +6,7 @@ DS Web Service endpoint:
 http://rxid-ds2.us-east-2.elasticbeanstalk.com/
 
 Database hosted on AWS-RDS
+
 Host: rxidds.cqqygklpjkea.us-east-2.rds.amazonaws.com 
 
 Port: 5432
