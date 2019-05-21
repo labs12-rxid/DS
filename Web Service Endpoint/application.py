@@ -7,20 +7,24 @@ from joblib import load
 from flask_cors import CORS
 import pandas as pd
 import json
+import asyncio
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
 
 # ______ Module imports _____
-from drugscom import drugscom
+# from drugscom import drugscom
 from rxid_util import parse_input
-from rds_lib import db_connect, query_sql_data, query_from_rekog
+from rds_lib import db_connect, query_sql_data, query_from_rekog, get_colors_shapes
 from rekog import post_rekog
-
 
 """ create + config Flask app obj """
 application = Flask(__name__)
 CORS(application)
 
-drugs_com = drugscom()
-
+#drugs_com = drugscom()
 
 # ______________ R O U T E S  _____________________
 # ________ / HOME __________
@@ -30,14 +34,14 @@ def index():
 
 # ________  /identify/  route __________
 # __ input  {'imprint' : 'M370',  'color' : 1,  'shape' : 6}    
-@application.route('/identify', methods=['GET', 'POST'])
-def identify():
-    if request.method == 'POST':
-        post_params = request.get_json(force=True)
-        results = get_drugscom(post_params)
-        return results
-    else:
-        return jsonify("GET request to /identify :")
+# @application.route('/identify', methods=['GET', 'POST'])
+# def identify():
+#     if request.method == 'POST':
+#         post_params = request.get_json(force=True)
+#         results = get_drugscom(post_params)
+#         return results
+#     else:
+#         return jsonify("GET request to /identify :")
 
 
 # ________  /rxdata/  route __________
@@ -47,21 +51,20 @@ def rxdata():
     if request.method == 'POST':
         post_params = request.get_json(force=True)
         output_info = query_sql_data(post_params)
-        return output_info
+        return jsonify(output_info)
 
     else:
-        return jsonify("GET request to /rxdata :")
-
+        out_put = get_colors_shapes()
+        return jsonify(out_put)
 
 # ________  /rekog/  route __________
 @application.route('/rekog', methods=['GET', 'POST'])
 def rekog():
     if request.method == 'POST':
         post_params = request.get_json(force=True)
-        # https://s3.amazonaws.com/labs12-rxidstore/reference/00002-3228-30_391E1C80.jpg
         rekog_info = post_rekog(post_params)
         output_info = query_from_rekog(rekog_info)
-        return output_info
+        return jsonify(output_info)
     else:
         return jsonify("YOU just made a GET request to /rekog")
 
@@ -92,6 +95,10 @@ def get_drugscom(query_string):
 if __name__ == '__main__':
     application.run(debug=False)
 
+    # post_params = data = {"image_locations": ["https://raw.githubusercontent.com/ed-chin-git/ed-chin-git.github.io/master/sample_pill_image.jpg", ""]}
+    # rekog_info = post_rekog(post_params)
+    # output_info = query_from_rekog(rekog_info)
+    # print(output_info)
 
     # --- browser debugging
     # application.run(debug=True)
