@@ -11,18 +11,39 @@ load_dotenv()
 
 # ______query_from rekog __________
 def query_from_rekog(rekog_results):
-    if len(rekog_results) > 1:
-        results = [x for x in list(map(";".join, permutations(rekog_results)))]
-    else:
-        results = rekog_results
+    rekog_results = list(rekog_results)
+    rekog_results.sort(key=len, reverse=True)
 
-    total_results= []
+    results = []
+    for text_str in rekog_results:
+        # add text strings longer than 3
+        if len(text_str) > 3:
+            results.append(text_str)
+    #  Limit to only the top three
+    results = results[:3]
+    
+    
+    #   If no text_strings longer than 3 chars  
+    #   make permutations of the short strings
+    if results == []:
+        if len(rekog_results) > 1:
+            results = [x for x in list(map(";".join, permutations(rekog_results)))][:3]
+        else:
+            results = rekog_results
+
+    total_results = []
     for result in results:
-        qry_r = query_sql_data({"pill_name": "", "imprint": result, "color": "", "shape": ""})
+        print('querying :', result)
+        qry_r = query_sql_data({
+            "pill_name": "",
+            "imprint": result,
+            "color": "", "shape": ""
+            })
         if qry_r == '':
             continue
         else:
             total_results.append(qry_r)
+    print('query_from_rekog EXECUTED SUCCESSFULLY: ', results)
     return total_results
 
 #  _____ query and return SQL data ______________
@@ -32,27 +53,10 @@ def query_sql_data(parameter_list):
     sha_pe = parameter_list.get('shape')
     col_or = parameter_list.get('color')
 
-    # if sha_pe==0 or sha_pe=='None':
-    #     shape_text = None
-    # else:
-    #     for i in range(len(shape_codes)):
-    #         if shape_codes[i].get("code") == sha_pe:
-    #             dict_index = i
-    #     shape_text = shape_codes[dict_index].get("name").upper()
-
-    # if col_or == 0 or col_or == 'None':
-    #     color_text = None
-    # else:
-    #     for i in range(len(color_codes)):
-    #         if color_codes[i].get("code") == col_or:
-    #             dict_index = i
-    #     color_text = color_codes[dict_index].get("name").upper()
-
     db_engine = db_connect()
     schema_name = 'rxid'
     table_name = 'rxid_meds_data'
     table_string = schema_name + '.' + table_name 
-
     query = """SELECT
                     author,
                     splimprint,
@@ -69,7 +73,6 @@ def query_sql_data(parameter_list):
                     FROM """ + table_string + """ 
                 WHERE """
     
-
     ctr = 0
     if im_print is not None:
         if ctr>0:
@@ -101,12 +104,12 @@ def query_sql_data(parameter_list):
 
     query = query + " LIMIT 25;"       
     """
-        WHERE splimprint  LIKE ''       im_print
-        AND splshape_text LIKE 'OVAL'   shape_text
-        AND splcolor_text LIKE 'YELLOW'  color_text
+        WHERE splimprint  ILIKE ''       im_print
+        AND splshape_text ILIKE 'OVAL'   shape_text
+        AND splcolor_text ILIKE 'YELLOW'  color_text
         
         ----use double %% for wildcards!!!!!----
-        AND medicine_name LIKE '%%PANTO%%'  pill_name
+        AND medicine_name ILIKE '%%PANTO%%'  pill_name
     """
     results = db_engine.execute(query).fetchall()
     df = pd.DataFrame(results, columns=['author', 
@@ -206,4 +209,4 @@ def get_colors_shapes():
 
 # __________ M A I N ________________________
 if __name__ == '__main__':
-    print(query_from_rekog(['126']))
+    print(query_from_rekog({'ADOLL', 'ADCERA', 'w'}))

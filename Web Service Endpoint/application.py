@@ -22,14 +22,15 @@ CORS(application)
 # ___________  webscraper ______________
 # from drugscom import drugscom
 # drugs_com = drugscom()
-
+#
 # def close_drugs_com():
 #     print('started closing')
 #     if drugs_com != None:
 #         print('closing drugs_com')
 #         drugs_com.close()
-
+#
 # atexit.register(close_drugs_com)
+
 
 # ______________ R O U T E S  _____________________
 # ________ / HOME __________
@@ -56,7 +57,7 @@ def rxdata():
     if request.method == 'POST':
         post_params = request.get_json(force=True)
         output_info = query_sql_data(post_params)
-        return output_info
+        return jsonify(output_info)
 
     else:
         return jsonify("GET request to /rxdata :")
@@ -67,10 +68,11 @@ def rxdata():
 def rekog():
     if request.method == 'POST':
         post_params = request.get_json(force=True)
-        # https://s3.amazonaws.com/labs12-rxidstore/reference/00002-3228-30_391E1C80.jpg
+        print('rekog started - params:', post_params)
         rekog_info = post_rekog(post_params)
+        print('rekog complete - found:', rekog_info)
         output_info = query_from_rekog(rekog_info)
-        return output_info
+        return jsonify(output_info)
     else:
         return jsonify("YOU just made a GET request to /rekog")
 
@@ -102,11 +104,12 @@ if __name__ == '__main__':
     application.run(debug=False)
 
     # data = {"image_locations": ["https://raw.githubusercontent.com/ed-chin-git/ed-chin-git.github.io/master/sample_pill_image.jpg", ""]}
+
     # data = {"image_locations": ["https://s3.us-east-2.amazonaws.com/firstpythonbucketac60bb97-95e1-43e5-98e6-0ca294ec9aad/adderall.jpg", ""]}
+
     # data = {"image_locations": ["https://s3.us-east-2.amazonaws.com/firstpythonbucketac60bb97-95e1-43e5-98e6-0ca294ec9aad/img2b.JPG",
     #                             "https://s3.us-east-2.amazonaws.com/firstpythonbucketac60bb97-95e1-43e5-98e6-0ca294ec9aad/img2b.JPG"]}
     # rekog_info = post_rekog(data)
-    # print(rekog_info)
     # output_info = query_from_rekog(rekog_info)
     # print(output_info)
 
@@ -116,8 +119,8 @@ if __name__ == '__main__':
     #  --- for terminal debugging ------
     # results = get_drugscom()
     # print(results)
-# __________________________________________________
-# to launch from terminal : 
-#    change line 25 to  application.run(debug=True)
-#    cd to folder (where application.py resides)
-#    run >python application.py 
+    # __________________________________________________
+    # to launch from terminal : 
+    #    change line 25 to  application.run(debug=True)
+    #    cd to folder (where application.py resides)
+    #    run >python application.py 

@@ -106,12 +106,17 @@ venv.bak/
 
 #  RXid files to ignore
 *.pem
+*.jpg
+*.pwd
+.env
+Web Service Endpoint/*.pem
+Web Service Endpoint/*.jpg
+Web Service Endpoint/.env
+Web Service Endpoint/*.pwd
+
+
 .vscode/settings.json
-CSV/aws.pwd
-CSV/aws.lambdarpg.pwd
-CSV/aws.rxidds.pwd
 CSV/Pills.TEST.csv
-Web Service Endpoint/aws.rxidds.pwd
 Web Service Endpoint/BotoUser.credentials.csv
 BotoUser.credentials.csv
 aws.rxidds.pwd
@@ -122,4 +127,5 @@ Web Service Endpoint/00000001.jpg
 Web Service Endpoint/sample_pill_image.jpg
 Web Service Endpoint/gcvision.cred.json
 sample_pill_image.jpg
+.env
 .env

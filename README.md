@@ -2,8 +2,13 @@
 ## Data Science Repository
    Mark Oliver, Carlos Gutierrez, Ed Chin
 
-DS Web Service endpoint: 
-http://rxid-ds2.us-east-2.elasticbeanstalk.com/
+DS test endpoint: 
+http://rxid-ds.us-east-2.elasticbeanstalk.com/
+
+CI endpoints:
+http://rxidpython-testing.us-east-1.elasticbeanstalk.com/
+http://rxidpython.rhpafm2cmr.us-east-1.elasticbeanstalk.com
+
 
 Database hosted on AWS-RDS
 
