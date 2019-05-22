@@ -1,11 +1,11 @@
 '''
-
 Python Script to detect imprinted text on pill images using AWS Rekognition.
-Set up for passing just 1 image. 
-Will need to be refactored to pass 2 images based on URL or JSON given by WEB.
 
 Source code:
 https://github.com/labs12-rxid/DS/blob/master/text_detection_AWSRekognition.ipynb
+
+print(cv2.getBuildInformation())
+
 '''
 
 import urllib.request
@@ -22,15 +22,16 @@ load_dotenv()
 key_id = os.getenv("AWS_ACCESS_KEY_ID")
 secret_key = os.getenv("AWS_SECRET_ACCESS_KEY")
 reg_ion = os.getenv("AWS_DEFAULT_REGION")
-client=boto3.client('rekognition', region_name=reg_ion,
+client = boto3.client('rekognition', region_name=reg_ion,
                     aws_access_key_id=key_id,
                     aws_secret_access_key=secret_key)
+
 
 # Filter to increase image contrast
 def add_contrast(image_path):
     print('add_contrast: started :', image_path)
     #-----Reading the image-----------------------------------------------------
-    img = cv2.imread(image_path, 1)
+    img = cv2.imread(image_path)
     print('add_contrast: image read :', image_path)
             
     #-----Converting image to LAB Color model----------------------------------- 
@@ -58,7 +59,8 @@ def add_contrast(image_path):
 
     return image_contrast
 
-# Text  Detection Function
+
+# ____________ Text Detection Function ______________
 def post_rekog_with_filter(pic_json, con_fidence=70):
    
     # -------------Getting list of image file names -------------
@@ -85,10 +87,10 @@ def post_rekog_with_filter(pic_json, con_fidence=70):
                 # !!!!!!  WRAP THIS IN A TRY / CATCH !!!!!!!!!
                 print('detect started', imageFile)
                 response = client.detect_text(Image={'Bytes': image.read()})
-                print('detect ended', imageFile)
+                print('detect completed', imageFile)
 
             # ------------- Detected Text (List of Dictionaries) -------------
-            textDetections=response['TextDetections']
+            textDetections = response['TextDetections']
 
             # ------------- Parsing Through Detected Text and 
             # Making list of Unique Sets of Text Dectected -------------
@@ -122,7 +124,7 @@ def post_rekog_with_filter(pic_json, con_fidence=70):
                 print('detect complete - contrasted image:', imageFile2)
 
             # ------------- Detected Text (List of Dictionaries) -------------
-            textDetections2=response2['TextDetections']
+            textDetections2 = response2['TextDetections']
 
             # ------------- Parsing Through Detected Text and 
             # Making list of Unique Sets of Text Dectected -------------
@@ -162,22 +164,16 @@ def post_rekog_with_filter(pic_json, con_fidence=70):
     
     unique_list2 = [text for sublist in unique_list for text in sublist]
     unique_list2 = list(set(unique_list))
-    # print(len(unique_list))
     
     # ------------- Return 'final_list' -------------
     final_list = set(unique_list + unique_list2)
-
-    # If 'final_list' is empty return and empty set and break
+    
+    # If 'final_list' is empty, return empty set
     if len(final_list) == 0:
-        return {} 
-
-    if len(final_list) > elem_limit:
-        final_list = set(list(final_list)[:elem_limit])
-
-    print('final_list :', final_list)
+        return {}
     return final_list
 
-# Text  Detection Function
+
 def post_rekog(pic_json, con_fidence=70):
     # Getting list of image file names
     imageURL_list = pic_json.get("image_locations")
@@ -199,8 +195,9 @@ def post_rekog(pic_json, con_fidence=70):
             
             with open(imageFile, 'rb') as image:
                 # !!!!!!  WRAP THIS IN A TRY / CATCH !!!!!!!!!
+                print('detect started', imageFile)
                 response = client.detect_text(Image={'Bytes': image.read()})
-
+                print('detect completed', imageFile)
             # Detected Text (List of Dictionaries)
             textDetections = response['TextDetections']
 
@@ -235,24 +232,16 @@ def post_rekog(pic_json, con_fidence=70):
     # Return 'final_list'
     final_list = set(unique_list)
     
-    # If 'final_list' is empty return and empty set instead
+    # If 'final_list' is empty return empty set
     if len(final_list) == 0:
         return {}
-   
-    # For long resulting lists get only 3! 
-    # (new list length 3 will be random since it's originally a set turned to list)
-    # if len(final_list) > elem_limit:
-    #     # turning set to a list sorted by string length
-    #     final_list = sorted(list(final_list), key=len)[-elem_limit:]
-    #     final_list = set(final_list)
-    # print('all detected text', all_text)
     return final_list
 
 # __________ M A I N ________________________
 if __name__ == '__main__':
     data = {"image_locations": ["https://s3.us-east-2.amazonaws.com/firstpythonbucketac60bb97-95e1-43e5-98e6-0ca294ec9aad/adderall.jpg", ""]}
-    #data = {"image_locations": ["https://raw.githubusercontent.com/ed-chin-git/ed-chin-git.github.io/master/sample_pill_image.jpg", ""]}
-    #data = {"image_locations": ["https://s3.us-east-2.amazonaws.com/firstpythonbucketac60bb97-95e1-43e5-98e6-0ca294ec9aad/img2b.JPG",
+    # data = {"image_locations": ["https://raw.githubusercontent.com/ed-chin-git/ed-chin-git.github.io/master/sample_pill_image.jpg", ""]}
+    # data = {"image_locations": ["https://s3.us-east-2.amazonaws.com/firstpythonbucketac60bb97-95e1-43e5-98e6-0ca294ec9aad/img2b.JPG",
     #                            "https://s3.us-east-2.amazonaws.com/firstpythonbucketac60bb97-95e1-43e5-98e6-0ca294ec9aad/img2b.JPG"]}
-    print(post_rekog(data, 4, 80))
- 
+    print(post_rekog(data))
+    print(post_rekog_with_filter(data))
