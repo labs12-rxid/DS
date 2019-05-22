@@ -77,21 +77,21 @@ def query_sql_data(parameter_list):
     if im_print is not None:
         if ctr>0:
             query = query + " AND "
-        query = query +" UPPER(splimprint) LIKE '%%" + im_print.upper()+"%%'"
+        query = query +" UPPER(splimprint) ILIKE '%%" + im_print.upper()+"%%'"
         ctr +=1
     if sha_pe == "" or sha_pe == "None" :
         pass
     else:        
         if ctr>0:
             query = query + " AND "
-        query = query +" splshape_text LIKE " + "'"+sha_pe+"'" 
+        query = query +" splshape_text ILIKE " + "'"+sha_pe+"'" 
         ctr +=1
     if col_or == "" or col_or == "None":
         pass
     else:
         if ctr>0:
             query = query + " AND "
-        query = query +" splcolor_text LIKE " + "'"+col_or+"'" 
+        query = query +" splcolor_text ILIKE " + "'"+col_or+"'" 
         ctr +=1
 
     if pill_name == '' or pill_name == 'None':
@@ -99,7 +99,7 @@ def query_sql_data(parameter_list):
     else:
         if ctr>0:
             query = query + " AND "
-        query = query +" medicine_name LIKE '%%"+pill_name.upper()+"%%'"
+        query = query +" medicine_name ILIKE '%%"+pill_name.upper()+"%%'"
         ctr +=1
 
     query = query + " LIMIT 25;"       
