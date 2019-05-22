@@ -12,14 +12,14 @@ import atexit
 # ______ Module imports _____
 from rxid_util import parse_input
 from rds_lib import db_connect, query_sql_data, query_from_rekog
-from rekog import post_rekog
+from rekog import post_rekog, post_rekog_with_filter
 
 
 """ create + config Flask app obj """
 application = Flask(__name__)
 CORS(application)
 
-# ___________  webscraper ______________
+# ____  webscraper init/close ___________
 # from drugscom import drugscom
 # drugs_com = drugscom()
 #
@@ -81,7 +81,11 @@ def rekog():
 def nnet():
     if request.method == 'POST':
         post_params = request.get_json(force=True)
-        return jsonify(post_params)
+        print('rekog started - params:', post_params)
+        rekog_info = post_rekog_with_filter(post_params)
+        print('rekog complete - found:', rekog_info)
+        output_info = query_from_rekog(rekog_info)
+        return jsonify(output_info)
     else:
         return jsonify("YOU just made a GET request to /nnet")
 
