@@ -53,8 +53,8 @@ def add_contrast(image_path):
 
 # Text  Dectection Function
 
-def post_rekog(pic_json):
-    
+def post_rekog(pic_json, elem_limit=3, con_fidence=70):
+   
     # -------------Getting list of image file names -------------
     imageURL_list = pic_json.get("image_locations")
     # print(f'imageURL_list {imageURL_list}')
@@ -90,7 +90,7 @@ def post_rekog(pic_json):
             text_found = []
 
             for text in textDetections:
-                if text['Confidence'] > 50:
+                if text['Confidence'] > con_fidence:
                     text_found.append(text['DetectedText'])
 #                     print(text['Confidence'])
 #             print(f'text_found: {text_found}')
@@ -122,7 +122,7 @@ def post_rekog(pic_json):
             text_found2 = []
 
             for text in textDetections2:
-                if text['Confidence'] > 50:
+                if text['Confidence'] > con_fidence:
                     text_found2.append(text['DetectedText'])
 #                     print(text['Confidence'])
 #             print(f'text_found: {text_found}')
@@ -164,16 +164,27 @@ def post_rekog(pic_json):
     unique_list2 = [text for sublist in unique_list for text in sublist]
     unique_list2 = list(set(unique_list))
     # print(len(unique_list))
-
+    
     # ------------- Return 'final_list' -------------
     final_list = set(unique_list + unique_list2)
+
+    # If 'final_list' is empty return and empty set and break
+    if len(final_list) == 0:
+        return {} 
+
+    if len(final_list) > elem_limit:
+        final_list = set(list(final_list)[:elem_limit])
     return final_list
 
 
 # __________ M A I N ________________________
 if __name__ == '__main__':
-    data = {"image_locations": ["https://raw.githubusercontent.com/ed-chin-git/ed-chin-git.github.io/master/sample_pill_image.jpg", ""]}
-    print(post_rekog(data))
+    #data = {"image_locations": ["https://s3.us-east-2.amazonaws.com/firstpythonbucketac60bb97-95e1-43e5-98e6-0ca294ec9aad/adderall.jpg", ""]}
+    #data = {"image_locations": ["https://raw.githubusercontent.com/ed-chin-git/ed-chin-git.github.io/master/sample_pill_image.jpg", ""]}
+    data = {"image_locations": ["https://s3.us-east-2.amazonaws.com/firstpythonbucketac60bb97-95e1-43e5-98e6-0ca294ec9aad/img2b.JPG",
+                                "https://s3.us-east-2.amazonaws.com/firstpythonbucketac60bb97-95e1-43e5-98e6-0ca294ec9aad/img2b.JPG"]}
+    print(post_rekog(data,4,80))
+
     
 
 

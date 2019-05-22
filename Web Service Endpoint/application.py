@@ -7,24 +7,30 @@ from joblib import load
 from flask_cors import CORS
 import pandas as pd
 import json
-import asyncio
-from dotenv import load_dotenv
-import os
-
-load_dotenv()
-
+import atexit
 
 # ______ Module imports _____
-# from drugscom import drugscom
 from rxid_util import parse_input
-from rds_lib import db_connect, query_sql_data, query_from_rekog, get_colors_shapes
+from rds_lib import db_connect, query_sql_data, query_from_rekog
 from rekog import post_rekog
+
 
 """ create + config Flask app obj """
 application = Flask(__name__)
 CORS(application)
 
-#drugs_com = drugscom()
+# ___________  webscraper ______________
+# from drugscom import drugscom
+# drugs_com = drugscom()
+#
+# def close_drugs_com():
+#     print('started closing')
+#     if drugs_com != None:
+#         print('closing drugs_com')
+#         drugs_com.close()
+#
+# atexit.register(close_drugs_com)
+
 
 # ______________ R O U T E S  _____________________
 # ________ / HOME __________
@@ -54,15 +60,17 @@ def rxdata():
         return jsonify(output_info)
 
     else:
-        out_put = get_colors_shapes()
-        return jsonify(out_put)
+        return jsonify("GET request to /rxdata :")
+
 
 # ________  /rekog/  route __________
 @application.route('/rekog', methods=['GET', 'POST'])
 def rekog():
     if request.method == 'POST':
         post_params = request.get_json(force=True)
+        print('rekog started - params:', post_params)
         rekog_info = post_rekog(post_params)
+        print('rekog complete - found:', rekog_info)
         output_info = query_from_rekog(rekog_info)
         return jsonify(output_info)
     else:
@@ -78,25 +86,30 @@ def nnet():
         return jsonify("YOU just made a GET request to /nnet")
 
 # ___________________ FUNCTIONS ________________________________
-def get_drugscom(query_string):
-    out_put = ''
-    try:
-        d_data = drugs_com.get_data(query_string)
-        out_put = json.dumps(d_data, indent=4)
-    except Exception as e:
-        out_put = f'error: {e}'
-    finally:
-        if drugs_com is not None: 
-            drugs_com.close()
-    return out_put
+# def get_drugscom(query_string):
+#     out_put = ''
+#     try:
+#         d_data = drugs_com.get_data(query_string)
+#         out_put = json.dumps(d_data, indent=4)
+#     except Exception as e:
+#         out_put = f'error: {e}'
+#     finally:
+#         if drugs_com is not None: 
+#             drugs_com.reset()
+#     return out_put
 
 
 # __________ M A I N ________________________
 if __name__ == '__main__':
     application.run(debug=False)
 
-    # post_params = data = {"image_locations": ["https://raw.githubusercontent.com/ed-chin-git/ed-chin-git.github.io/master/sample_pill_image.jpg", ""]}
-    # rekog_info = post_rekog(post_params)
+    # data = {"image_locations": ["https://raw.githubusercontent.com/ed-chin-git/ed-chin-git.github.io/master/sample_pill_image.jpg", ""]}
+
+    # data = {"image_locations": ["https://s3.us-east-2.amazonaws.com/firstpythonbucketac60bb97-95e1-43e5-98e6-0ca294ec9aad/adderall.jpg", ""]}
+
+    # data = {"image_locations": ["https://s3.us-east-2.amazonaws.com/firstpythonbucketac60bb97-95e1-43e5-98e6-0ca294ec9aad/img2b.JPG",
+    #                             "https://s3.us-east-2.amazonaws.com/firstpythonbucketac60bb97-95e1-43e5-98e6-0ca294ec9aad/img2b.JPG"]}
+    # rekog_info = post_rekog(data)
     # output_info = query_from_rekog(rekog_info)
     # print(output_info)
 
@@ -106,8 +119,8 @@ if __name__ == '__main__':
     #  --- for terminal debugging ------
     # results = get_drugscom()
     # print(results)
-# __________________________________________________
-# to launch from terminal : 
-#    change line 25 to  application.run(debug=True)
-#    cd to folder (where application.py resides)
-#    run >python application.py 
+    # __________________________________________________
+    # to launch from terminal : 
+    #    change line 25 to  application.run(debug=True)
+    #    cd to folder (where application.py resides)
+    #    run >python application.py 
