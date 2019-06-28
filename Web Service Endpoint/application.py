@@ -13,6 +13,7 @@ import atexit
 from rxid_util import parse_input
 from rds_lib import db_connect, query_sql_data, query_from_rekog
 from rekog import post_rekog, post_rekog_with_filter
+from nnet import shape_detect
 
 
 """ create + config Flask app obj """
@@ -47,6 +48,7 @@ def rekog():
         post_params = request.get_json(force=True)
         print('rekog started - params:', post_params)
         rekog_info = post_rekog(post_params)
+        shape_info = shape_detect(post_params)
         print('rekog complete - found:', rekog_info)
         output_info = query_from_rekog(rekog_info)
         return jsonify(output_info)
