@@ -1,0 +1,28 @@
+{% extends "layout.html" %}
+{% block content %}
+    {% for post in posts %}
+        <article class="media content-section">
+            <div class="media-body">
+                <!-- <div class="article-metadata">
+                    <a class="mr-2" href="#">{{ post.author }}</a>
+                    <small class="text-muted">{{ post.date_posted }}</small>
+                </div> -->
+                <h2><a class="article-title">{{ post.title }}</a></h2>
+                <!-- <p class="article-content">{{ post.content }}</p> -->
+                
+                <form action="/home" method="POST" enctype="multipart/form-data">
+                    
+                    <div class="form-group">
+                        <div class="custom-file">
+                            <input type="file" class="custom-file-input" name="image" id="image">
+                            <label class="custom-file-label" for="image">Select image...</label>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Upload Image & Find Pill</button>
+
+                </form>
+            </div>
+        </article>
+    {% endfor %}
+{% endblock content %}
