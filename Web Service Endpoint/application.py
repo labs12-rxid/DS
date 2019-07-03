@@ -8,12 +8,14 @@ from flask_cors import CORS
 import pandas as pd
 import json
 import atexit
+import requests
 
 # ______ Module imports _____
 from rxid_util import parse_input
 from rds_lib import db_connect, query_sql_data, query_from_rekog
 from rekog import post_rekog, post_rekog_with_filter
 from nnet import shape_detect
+from ocr_site import allowed_image, add_to_s3, file_upload
 
 
 """ create + config Flask app obj """
@@ -22,10 +24,34 @@ CORS(application)
 
 
 # ______________ R O U T E S  _____________________
-# ________ / HOME __________
-@application.route('/')
+# _________ / HOME  _________________
+@application.route("/")
 def index():
-    return render_template('base.html', title='Home')
+    return render_template("upload.html")
+
+
+# __________ /upload  __________________
+@application.route("/upload", methods=["GET", "POST"])
+def upload():
+    # Check if request is POST and the request has files (not empty)
+    if request.method == "POST":
+        if request.files:
+            # file_upload returns dict with list of S3 images
+            data = file_upload() 
+
+        print('rekog started - params:', data)
+        rekog_info = post_rekog(data)
+        # shape_info = shape_detect(data)
+        print('rekog complete - found:', rekog_info)
+        output_info = query_from_rekog(rekog_info)
+
+    return render_template("results.html", result=output_info)
+    
+
+# ___________  /about  __________________
+@application.route("/about")
+def about():
+    return render_template("about.html", title="About")
 
 
 # ________  /rxdata/  route __________
