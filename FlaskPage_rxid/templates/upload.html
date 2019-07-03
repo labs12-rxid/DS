@@ -1,0 +1,18 @@
+{% extends "layout.html" %}
+{% block content %}
+    <div class="media-body">
+        <h2>Let's find your pill</h2>
+        <form id="upload-form" action={{ url_for('upload') }} method="POST" enctype="multipart/form-data">
+            <div>
+                <p><br>1. Select from pill images saved on your device <br>(up to 2 images if pill contains text on more than one side)</p>
+                <div class="button">
+                    <input type="file" name="image" id="image" accept="image/*" multiple>
+                    <!-- <input type="file" class="custom-file-input" name="image" id="image">
+                    <label class="custom-file-label" for="image">Select image...</label> -->
+                </div>
+            </div>
+            <p><br>2. Upload selected files to find out more about your pill</p>
+            <button type="submit" class="btn btn-primary">Upload Image & Process</button>
+        </form>
+    </div>
+{% endblock content %}
