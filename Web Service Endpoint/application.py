@@ -8,7 +8,6 @@ from flask_cors import CORS
 import pandas as pd
 import json
 import atexit
-import requests
 
 # ______ Module imports _____
 from rxid_util import parse_input
@@ -34,17 +33,16 @@ def index():
 @application.route("/upload", methods=["GET", "POST"])
 def upload():
     # Check if request is POST and the request has files (not empty)
-    if request.method == "POST":
-        if request.files:
-            # file_upload returns dict with list of S3 images
-            data = file_upload() 
-
+    if request.method == "POST" and request.files:
+        # file_upload returns dict with list of S3 images
+        data = file_upload()
         print('rekog started - params:', data)
         rekog_info = post_rekog(data)
         # shape_info = shape_detect(data)
         print('rekog complete - found:', rekog_info)
         output_info = query_from_rekog(rekog_info)
-
+    else:
+        output_info = ["No image provided"]
     return render_template("results.html", result=output_info)
     
 
