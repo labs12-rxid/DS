@@ -22,6 +22,23 @@ from ocr_site import allowed_image, add_to_s3, file_upload
 application = Flask(__name__)
 CORS(application)
 
+# ___________ Pill Display Layout ___________
+# posts = [
+#     {
+#         'author': 'Carlos Gutierrez',
+#         'title': '1st Post',
+#         'content': 'This is the first post in here.',
+#         'date_posted': 'June 14, 2019'
+#     },
+#     {
+#         'author': 'Carlos Gutierrez',
+#         'title': '2nd Post',
+#         'content': 'This is the second post in here.',
+#         'date_posted': 'June 17, 2019'
+#     }
+# ]
+
+
 
 # ______________ R O U T E S  _____________________
 # _________ / HOME  _________________
@@ -34,18 +51,25 @@ def index():
 @application.route("/upload", methods=["GET", "POST"])
 def upload():
     # Check if request is POST and the request has files (not empty)
-    if request.method == "POST":
-        if request.files:
-            # file_upload returns dict with list of S3 images
-            data = file_upload() 
+    if request.method == "POST" and request.files:
+        # file_upload returns dict with list of S3 images
+        data = file_upload() 
 
         print('rekog started - params:', data)
         rekog_info = post_rekog(data)
         # shape_info = shape_detect(data)
         print('rekog complete - found:', rekog_info)
-        output_info = query_from_rekog(rekog_info)
-
-    return render_template("results.html", result=output_info)
+        output_json = query_from_rekog(rekog_info)
+        if output_json == []:
+            output_dict = []
+        else:
+            # Replacing nulls for Nones to avoid errors with 'eval' method
+            output_json = output_json[0].replace('null', 'None')
+            # 'eval' built-in method will return the pass in expression as Python
+            output_dict = list(eval(output_json))
+    else:
+        return 'You did not select an image file from your device for us to process.\n Please go back choose an image.'
+    return render_template("results.html", results=output_dict)
     
 
 # ___________  /about  __________________
@@ -98,7 +122,7 @@ def nnet():
 
 # __________ M A I N ________________________
 if __name__ == '__main__':
-    application.run(debug=False)
+    application.run(debug=True)
 
     # --- browser debugging
     # application.run(debug=True)
