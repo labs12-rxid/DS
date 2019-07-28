@@ -7,7 +7,6 @@ from joblib import load
 from flask_cors import CORS
 import pandas as pd
 import json
-import atexit
 
 # ______ Module imports _____
 from rxid_util import parse_input
@@ -40,11 +39,17 @@ def upload():
         rekog_info = post_rekog(data)
         # shape_info = shape_detect(data)
         print('rekog complete - found:', rekog_info)
-        output_info = query_from_rekog(rekog_info)
+        output_json = query_from_rekog(rekog_info)
+        if output_json == []:
+            output_dict = []
+        else:
+            # Replacing nulls for Nones to avoid errors with 'eval' method
+            output_json = output_json[0].replace('null', 'None')
+            # 'eval' built-in method will return the pass in expression as Python
+            output_dict = list(eval(output_json))
     else:
-        output_info = ["No image provided"]
-    return render_template("results.html", result=output_info)
-    
+        return 'You did not select an image file from your device for us to process.\n Please go back choose an image.'
+    return render_template("results.html", results=output_dict)
 
 # ___________  /about  __________________
 @application.route("/about")

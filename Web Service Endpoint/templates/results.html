@@ -1,5 +1,45 @@
 {% extends "layout.html" %}
 {% block content %}
     <h1>Pill Results</h1>
-    <p>{{ result }}</p>
+    {% if results==[] %}
+        <br>
+        <h3>We did not find a match with any of the pills in our database.</h3>
+    {% else %}
+        {% for result in results %}
+            <table id="vertical-1" cellpadding="7">
+                <div>
+                    <tr>
+                        <th>Pill Name</th>
+                        <td>{{ result.medicine_name }}</td>
+                    </tr>
+                    <tr>
+                        <th>Imprint</th>
+                        <td>{{ result.imprint }}</td>
+                    </tr>
+                    <tr>
+                        <th>Color</th>
+                        <td>{{ result.color_text }}</td>
+                    </tr>
+                    <tr>
+                        <th>Shape</th>
+                        <td>{{ result.shape_text }}</td>
+                    </tr>
+                    <tr>
+                        <th>Strength</th>
+                        <td>{{ result.spl_strength }}</td>
+                    </tr>
+                    <tr>
+                        <th>Drug Code</th>
+                        <td>{{ result.product_code }}</td>
+                    </tr>
+                    <tr>
+                        <th>Label Author</th>
+                        <td>{{ result.author }}</td>
+                    </tr>
+                    <br>
+                </div>
+            </table>
+        {% endfor %}
+    {% endif %}
+    <!-- <p>{{ results }}</p> -->
 {% endblock content %}
