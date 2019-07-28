@@ -8,7 +8,6 @@ from flask_cors import CORS
 import pandas as pd
 import json
 import atexit
-import requests
 
 # ______ Module imports _____
 from rxid_util import parse_input
@@ -53,7 +52,7 @@ def upload():
     # Check if request is POST and the request has files (not empty)
     if request.method == "POST" and request.files:
         # file_upload returns dict with list of S3 images
-        data = file_upload() 
+        data = file_upload()
 
         print('rekog started - params:', data)
         rekog_info = post_rekog(data)
@@ -70,7 +69,7 @@ def upload():
     else:
         return 'You did not select an image file from your device for us to process.\n Please go back choose an image.'
     return render_template("results.html", results=output_dict)
-    
+
 
 # ___________  /about  __________________
 @application.route("/about")
