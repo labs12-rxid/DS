@@ -20,6 +20,23 @@ from ocr_site import allowed_image, add_to_s3, file_upload
 application = Flask(__name__)
 CORS(application)
 
+# ___________ Pill Display Layout ___________
+# posts = [
+#     {
+#         'author': 'Carlos Gutierrez',
+#         'title': '1st Post',
+#         'content': 'This is the first post in here.',
+#         'date_posted': 'June 14, 2019'
+#     },
+#     {
+#         'author': 'Carlos Gutierrez',
+#         'title': '2nd Post',
+#         'content': 'This is the second post in here.',
+#         'date_posted': 'June 17, 2019'
+#     }
+# ]
+
+
 
 # ______________ R O U T E S  _____________________
 # _________ / HOME  _________________
@@ -35,6 +52,7 @@ def upload():
     if request.method == "POST" and request.files:
         # file_upload returns dict with list of S3 images
         data = file_upload()
+
         print('rekog started - params:', data)
         rekog_info = post_rekog(data)
         # shape_info = shape_detect(data)
@@ -50,6 +68,7 @@ def upload():
     else:
         return 'You did not select an image file from your device for us to process.\n Please go back choose an image.'
     return render_template("results.html", results=output_dict)
+
 
 # ___________  /about  __________________
 @application.route("/about")
@@ -101,7 +120,7 @@ def nnet():
 
 # __________ M A I N ________________________
 if __name__ == '__main__':
-    application.run(debug=False)
+    application.run(debug=True)
 
     # --- browser debugging
     # application.run(debug=True)
