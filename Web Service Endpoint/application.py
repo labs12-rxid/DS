@@ -7,7 +7,6 @@ from joblib import load
 from flask_cors import CORS
 import pandas as pd
 import json
-import atexit
 
 # ______ Module imports _____
 from rxid_util import parse_input
