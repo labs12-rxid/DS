@@ -21,22 +21,6 @@ from ocr_site import allowed_image, add_to_s3, file_upload
 application = Flask(__name__)
 CORS(application)
 
-# ___________ Pill Display Layout ___________
-# posts = [
-#     {
-#         'author': 'Carlos Gutierrez',
-#         'title': '1st Post',
-#         'content': 'This is the first post in here.',
-#         'date_posted': 'June 14, 2019'
-#     },
-#     {
-#         'author': 'Carlos Gutierrez',
-#         'title': '2nd Post',
-#         'content': 'This is the second post in here.',
-#         'date_posted': 'June 17, 2019'
-#     }
-# ]
-
 
 
 # ______________ R O U T E S  _____________________
